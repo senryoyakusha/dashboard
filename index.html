@@ -15,117 +15,97 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg-dark);
             color: #ffffff;
             margin: 0;
             padding-bottom: 30px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
         }
 
         header {
-            width: 100%;
-            padding: 20px 0;
+            padding: 20px;
             background: var(--card-bg);
             border-bottom: 1px solid #333;
             text-align: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .header-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            letter-spacing: 3px;
             color: var(--gold);
+            font-weight: bold;
+            letter-spacing: 2px;
         }
 
         .container {
             width: 92%;
             max-width: 500px;
-            margin-top: 20px;
+            margin: 20px auto;
         }
 
-        /* スタッフ選択チップ */
-        .staff-selector {
-            display: flex;
-            overflow-x: auto;
-            gap: 10px;
-            padding: 5px 0 20px 0;
-            scrollbar-width: none;
-            -webkit-overflow-scrolling: touch;
+        /* スタッフ選択エリア */
+        .selection-area {
+            margin-bottom: 20px;
         }
-        .staff-selector::-webkit-scrollbar { display: none; }
 
-        .staff-chip {
-            white-space: nowrap;
-            padding: 8px 20px;
-            border-radius: 25px;
+        .select-trigger {
             background: var(--card-bg);
-            border: 1px solid #333;
-            font-size: 0.85rem;
-            color: var(--text-gray);
+            border: 1px solid var(--gold);
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             cursor: pointer;
-            transition: 0.2s;
-        }
-        .staff-chip.active {
-            background: var(--gold);
-            color: #000;
-            border-color: var(--gold);
             font-weight: bold;
         }
 
-        /* グラフコンテナ */
+        .dropdown-menu {
+            display: none;
+            background: var(--card-bg);
+            border: 1px solid #444;
+            border-radius: 12px;
+            margin-top: 5px;
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .staff-option {
+            padding: 12px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .staff-option input[type="checkbox"] {
+            transform: scale(1.5);
+            accent-color: var(--gold);
+        }
+
+        /* グラフエリア */
         .chart-card {
             background: var(--card-bg);
             border-radius: 20px;
-            padding: 20px;
+            padding: 15px;
             border: 1px solid rgba(212, 175, 55, 0.2);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            height: 350px;
+            height: 400px;
         }
 
-        #loading {
-            margin-top: 100px;
-            text-align: center;
-            color: var(--gold);
-        }
-
-        .refresh-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            background: var(--gold);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.6);
-            z-index: 500;
-            cursor: pointer;
-        }
+        #loading { text-align: center; margin-top: 50px; color: var(--gold); }
     </style>
 </head>
 <body>
 
-<header>
-    <div class="header-title">SALES TREND 2026</div>
-</header>
+<header>SALES TREND 2026</header>
 
-<div id="loading">
-    <i class="fas fa-spinner fa-spin fa-2x"></i>
-    <p>Loading Data...</p>
-</div>
+<div id="loading"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
 
 <div class="container" id="main-content" style="display: none;">
-    <div class="staff-selector" id="staff-selector">
-        <div class="staff-chip active" onclick="updateView('店舗全体', this)">店舗全体</div>
+    
+    <div class="selection-area">
+        <div class="select-trigger" onclick="toggleDropdown()">
+            <span id="selected-staff-label">表示スタッフを選択</span>
+            <i class="fas fa-chevron-down"></i>
+        </div>
+        <div id="staff-dropdown" class="dropdown-menu">
+            </div>
     </div>
 
     <div class="chart-card">
@@ -133,116 +113,94 @@
     </div>
 </div>
 
-<div class="refresh-btn" onclick="fetchData()">
-    <i class="fas fa-sync-alt" style="color: #000; font-size: 1.4rem;"></i>
-</div>
-
 <script>
-    // あなたのGAS URL
     const GAS_URL = "https://script.google.com/a/macros/senryoyakusha.com/s/AKfycbxAzSojBu5Tjzjge2akg4d_VKGdl6ZCYoEjaRRKiZaRI5DXfFEdkH8MKwW2eI2UgCc/exec";
     const userId = "user_gps3atgzq"; // PCテスト用
 
     let allData = null;
     let myChart = null;
+    let selectedStaffs = [];
 
-    /**
-     * 初回データ取得
-     */
     async function fetchData() {
         try {
             const res = await fetch(`${GAS_URL}?userId=${userId}`);
             allData = await res.json();
             
             if (allData.status === 'success') {
-                renderSelector(allData.staffList);
-                renderChart("店舗全体");
+                // デフォルト選択（自分の名前を探すロジックはGAS側から渡されたユーザー情報で行う）
+                // ここでは仮に最初のスタッフを選択
+                selectedStaffs = ["店舗全体"];
+                renderDropdown(allData.staffList);
+                renderChart();
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
             }
-        } catch (e) {
-            document.getElementById('loading').innerText = "通信エラーが発生しました";
-        }
+        } catch (e) { console.error(e); }
     }
 
-    /**
-     * スタッフボタンの生成
-     */
-    function renderSelector(list) {
-        const container = document.getElementById('staff-selector');
-        // 二重生成防止
-        container.innerHTML = '<div class="staff-chip active" onclick="updateView(\'店舗全体\', this)">店舗全体</div>';
+    function toggleDropdown() {
+        const menu = document.getElementById('staff-dropdown');
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function renderDropdown(list) {
+        const menu = document.getElementById('staff-dropdown');
+        const items = ["店舗全体", ...list];
         
-        list.forEach(name => {
-            const chip = document.createElement('div');
-            chip.className = 'staff-chip';
-            chip.innerText = name;
-            chip.onclick = () => updateView(name, chip);
-            container.appendChild(chip);
-        });
+        menu.innerHTML = items.map(name => `
+            <div class="staff-option">
+                <input type="checkbox" id="chk-${name}" value="${name}" 
+                    ${selectedStaffs.includes(name) ? 'checked' : ''} 
+                    onchange="handleSelectionChange()">
+                <label for="chk-${name}">${name}</label>
+            </div>
+        `).join('');
     }
 
-    /**
-     * 折れ線グラフの描画
-     */
-    function renderChart(targetName) {
+    function handleSelectionChange() {
+        const checkboxes = document.querySelectorAll('.staff-option input:checked');
+        selectedStaffs = Array.from(checkboxes).map(cb => cb.value);
+        document.getElementById('selected-staff-label').innerText = 
+            selectedStaffs.length > 0 ? selectedStaffs.join(', ') : '選択してください';
+        renderChart();
+    }
+
+    function renderChart() {
         const ctx = document.getElementById('salesChart').getContext('2d');
         const labels = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
         
         if (myChart) myChart.destroy();
 
+        const datasets = selectedStaffs.map((name, index) => ({
+            label: name,
+            data: allData.chartData[name],
+            borderColor: index === 0 ? '#d4af37' : `hsl(${index * 40}, 70%, 60%)`, // 2人目以降は色を変える
+            backgroundColor: 'transparent',
+            borderWidth: 3,
+            pointRadius: 6,
+            pointHitRadius: 25, // ★タップの反応範囲を大幅拡大
+            tension: 0.3
+        }));
+
         myChart = new Chart(ctx, {
             type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: targetName,
-                    data: allData.chartData[targetName],
-                    borderColor: '#d4af37',
-                    backgroundColor: 'rgba(212, 175, 55, 0.1)',
-                    borderWidth: 3,
-                    pointBackgroundColor: '#fff',
-                    pointBorderColor: '#d4af37',
-                    pointRadius: 4,
-                    tension: 0.3,
-                    fill: true
-                }]
-            },
+            data: { labels, datasets },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false, // ★点の真上じゃなくても反応させる
+                },
                 scales: {
-                    y: { 
-                        beginAtZero: true, 
-                        grid: { color: 'rgba(255,255,255,0.05)' },
-                        ticks: { color: '#aaa', font: { size: 10 } }
-                    },
-                    x: { 
-                        grid: { display: false },
-                        ticks: { color: '#aaa', font: { size: 10 } }
-                    }
+                    y: { beginAtZero: true, grid: { color: '#333' } },
+                    x: { grid: { display: false } }
                 },
                 plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: 'rgba(30, 30, 30, 0.9)',
-                        callbacks: {
-                            label: function(context) {
-                                return context.parsed.y.toLocaleString() + '円';
-                            }
-                        }
-                    }
+                    legend: { labels: { color: '#fff' } }
                 }
             }
         });
-    }
-
-    /**
-     * 切り替え処理
-     */
-    function updateView(name, el) {
-        document.querySelectorAll('.staff-chip').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-        renderChart(name);
     }
 
     window.onload = fetchData;
