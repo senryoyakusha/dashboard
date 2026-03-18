@@ -2,57 +2,153 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Dashboard 2026</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Management Dashboard 2026</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --bg: #121212; --card: #1e1e1e; --gold: #d4af37; --gray: #a0a0a0; }
-        body { font-family: sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; }
-        header { text-align: center; color: var(--gold); letter-spacing: 2px; margin-bottom: 20px; font-weight: bold; }
-        
-        /* スタッフ選択チップ（横スクロール） */
-        .staff-selector {
-            display: flex; overflow-x: auto; gap: 10px; padding-bottom: 15px;
-            scrollbar-width: none; -webkit-overflow-scrolling: touch;
+        :root {
+            --bg-dark: #121212;
+            --card-bg: #1e1e1e;
+            --gold: #d4af37;
+            --text-gray: #a0a0a0;
         }
-        .staff-chip {
-            white-space: nowrap; padding: 8px 18px; border-radius: 20px;
-            background: var(--card); border: 1px solid #333; font-size: 0.85rem; cursor: pointer;
-        }
-        .staff-chip.active { background: var(--gold); color: #000; border-color: var(--gold); }
 
-        .chart-container {
-            background: var(--card); border-radius: 15px; padding: 15px;
-            border: 1px solid rgba(212, 175, 55, 0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-dark);
+            color: #ffffff;
+            margin: 0;
+            padding-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
         }
-        #loading { text-align: center; margin-top: 50px; color: var(--gold); }
+
+        header {
+            width: 100%;
+            padding: 20px 0;
+            background: var(--card-bg);
+            border-bottom: 1px solid #333;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            letter-spacing: 3px;
+            color: var(--gold);
+        }
+
+        .container {
+            width: 92%;
+            max-width: 500px;
+            margin-top: 20px;
+        }
+
+        /* スタッフ選択チップ */
+        .staff-selector {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding: 5px 0 20px 0;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        .staff-selector::-webkit-scrollbar { display: none; }
+
+        .staff-chip {
+            white-space: nowrap;
+            padding: 8px 20px;
+            border-radius: 25px;
+            background: var(--card-bg);
+            border: 1px solid #333;
+            font-size: 0.85rem;
+            color: var(--text-gray);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .staff-chip.active {
+            background: var(--gold);
+            color: #000;
+            border-color: var(--gold);
+            font-weight: bold;
+        }
+
+        /* グラフコンテナ */
+        .chart-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            height: 350px;
+        }
+
+        #loading {
+            margin-top: 100px;
+            text-align: center;
+            color: var(--gold);
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: var(--gold);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.6);
+            z-index: 500;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-<header>MANAGEMENT DASHBOARD</header>
+<header>
+    <div class="header-title">SALES TREND 2026</div>
+</header>
 
-<div id="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+<div id="loading">
+    <i class="fas fa-spinner fa-spin fa-2x"></i>
+    <p>Loading Data...</p>
+</div>
 
-<div id="main-content" style="display: none;">
+<div class="container" id="main-content" style="display: none;">
     <div class="staff-selector" id="staff-selector">
-        <div class="staff-chip active" onclick="updateChart('店舗全体', this)">店舗全体</div>
+        <div class="staff-chip active" onclick="updateView('店舗全体', this)">店舗全体</div>
     </div>
 
-    <div class="chart-container">
+    <div class="chart-card">
         <canvas id="salesChart"></canvas>
     </div>
 </div>
 
+<div class="refresh-btn" onclick="fetchData()">
+    <i class="fas fa-sync-alt" style="color: #000; font-size: 1.4rem;"></i>
+</div>
+
 <script>
+    // あなたのGAS URL
     const GAS_URL = "https://script.google.com/a/macros/senryoyakusha.com/s/AKfycbxAzSojBu5Tjzjge2akg4d_VKGdl6ZCYoEjaRRKiZaRI5DXfFEdkH8MKwW2eI2UgCc/exec";
-    const userId = "user_gps3atgzq"; // PCテスト用。本番はlocalStorageから取得
-    
+    const userId = "user_gps3atgzq"; // PCテスト用
+
     let allData = null;
     let myChart = null;
 
-    async function init() {
+    /**
+     * 初回データ取得
+     */
+    async function fetchData() {
         try {
             const res = await fetch(`${GAS_URL}?userId=${userId}`);
             allData = await res.json();
@@ -63,84 +159,75 @@
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
             }
-        } catch (e) { document.getElementById('loading').innerText = "Error: " + e; }
+        } catch (e) {
+            document.getElementById('loading').innerText = "通信エラーが発生しました";
+        }
     }
 
+    /**
+     * スタッフボタンの生成
+     */
     function renderSelector(list) {
         const container = document.getElementById('staff-selector');
+        // 二重生成防止
+        container.innerHTML = '<div class="staff-chip active" onclick="updateView(\'店舗全体\', this)">店舗全体</div>';
+        
         list.forEach(name => {
             const chip = document.createElement('div');
             chip.className = 'staff-chip';
             chip.innerText = name;
-            chip.onclick = () => updateChart(name, chip);
+            chip.onclick = () => updateView(name, chip);
             container.appendChild(chip);
         });
     }
 
     /**
-     * 折れ線グラフを描画
+     * 折れ線グラフの描画
      */
     function renderChart(targetName) {
         const ctx = document.getElementById('salesChart').getContext('2d');
         const labels = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
         
-        // 既存のグラフがあれば破棄（再描画のため）
-        if (myChart) {
-            myChart.destroy();
-        }
+        if (myChart) myChart.destroy();
 
         myChart = new Chart(ctx, {
-            type: 'line', // 折れ線グラフに変更
+            type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: targetName + ' 売上 (2026)',
+                    label: targetName,
                     data: allData.chartData[targetName],
-                    // --- デザイン設定 ---
-                    borderColor: '#d4af37',       /* 線の色：ゴールド */
-                    backgroundColor: 'rgba(212, 175, 55, 0.1)', /* 線の下の塗りつぶし色：ゴールド（透過） */
-                    borderWidth: 3,               /* 線の太さ */
-                    pointBackgroundColor: '#fff', /* 点の背景色：白 */
-                    pointBorderColor: '#d4af37', /* 点の枠線色：ゴールド */
-                    pointRadius: 5,               /* 点の大きさ */
-                    pointHoverRadius: 7,          /* ホバー時の点の大きさ */
-                    tension: 0.3,                 /* 線のカーブ具合（0だと直線） */
-                    fill: true                    /* 線の下を塗りつぶす */
+                    borderColor: '#d4af37',
+                    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#d4af37',
+                    pointRadius: 4,
+                    tension: 0.3,
+                    fill: true
                 }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false, // スマホの縦幅に合わせる
+                maintainAspectRatio: false,
                 scales: {
                     y: { 
                         beginAtZero: true, 
-                        grid: { color: 'rgba(255, 255, 255, 0.05)' }, /* グリッド線を薄く */
-                        ticks: { color: '#aaa', font: { size: 10 } }  /* フォントサイズ調整 */
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#aaa', font: { size: 10 } }
                     },
                     x: { 
-                        grid: { display: false }, /* X軸のグリッド線は非表示 */
+                        grid: { display: false },
                         ticks: { color: '#aaa', font: { size: 10 } }
                     }
                 },
-                plugins: { 
-                    legend: { display: false }, // 凡例は非表示
-                    tooltip: {                 /* ホバー時のツールチップ */
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
                         backgroundColor: 'rgba(30, 30, 30, 0.9)',
-                        titleColor: '#d4af37',
-                        bodyColor: '#fff',
-                        borderColor: '#d4af37',
-                        borderWidth: 1,
                         callbacks: {
                             label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed.y !== null) {
-                                    // 金額形式にフォーマット（例: 1,000,000円）
-                                    label += new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(context.parsed.y);
-                                }
-                                return label;
+                                return context.parsed.y.toLocaleString() + '円';
                             }
                         }
                     }
@@ -150,27 +237,15 @@
     }
 
     /**
-     * スタッフ選択時のグラフ更新処理（ここも少しだけ修正）
+     * 切り替え処理
      */
-    function updateChart(name, el) {
-        // チップのスタイルを切り替え
+    function updateView(name, el) {
         document.querySelectorAll('.staff-chip').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
-        
-        // 折れ線グラフ用に、グラフを一度破棄して再描画（または、データを更新してアニメーション）
-        // アニメーションを優先するなら myChart.update() ですが、線の太さなどが崩れる場合があるため再描画が安全です
-        renderChart(name); 
+        renderChart(name);
     }
 
-    function updateChart(name, el) {
-        document.querySelectorAll('.staff-chip').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-        myChart.data.datasets[0].label = name + ' 売上 (2026)';
-        myChart.data.datasets[0].data = allData.chartData[name];
-        myChart.update();
-    }
-
-    init();
+    window.onload = fetchData;
 </script>
 </body>
 </html>
