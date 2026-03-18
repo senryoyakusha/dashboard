@@ -11,19 +11,14 @@
         body { font-family: sans-serif; background: var(--bg); color: var(--white); margin: 0; padding-bottom: 30px; }
         header { padding: 15px; background: var(--card); border-bottom: 1px solid #333; text-align: center; color: var(--gold); font-weight: bold; letter-spacing: 2px; }
         .container { width: 94%; max-width: 500px; margin: 10px auto; }
-
-        /* 指標切り替えタブ */
         .metric-selector { display: flex; overflow-x: auto; gap: 8px; padding: 10px 0; scrollbar-width: none; }
         .metric-selector::-webkit-scrollbar { display: none; }
         .metric-btn { white-space: nowrap; padding: 8px 15px; border-radius: 8px; background: #2a2a2a; border: 1px solid #444; color: #aaa; font-size: 0.75rem; cursor: pointer; }
         .metric-btn.active { background: var(--gold); color: #000; border-color: var(--gold); font-weight: bold; }
-
-        /* セレクター */
         .select-box { background: var(--card); border: 1px solid #444; padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 10px; font-size: 0.85rem; }
         .dropdown { display: none; background: var(--card); border: 1px solid #444; border-radius: 10px; padding: 5px; max-height: 350px; overflow-y: auto; position: absolute; width: 90%; max-width: 470px; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         .store-header { background: rgba(212, 175, 55, 0.1); padding: 10px; color: var(--gold); font-weight: bold; font-size: 0.8rem; display: flex; align-items: center; gap: 10px; }
         .staff-option { padding: 10px 10px 10px 40px; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
-
         .chart-card { background: var(--card); border-radius: 15px; padding: 10px; border: 1px solid rgba(212, 175, 55, 0.2); height: 380px; margin-top: 10px; }
         #loading { text-align: center; margin-top: 80px; color: var(--gold); }
         input[type="checkbox"] { transform: scale(1.2); accent-color: var(--gold); }
@@ -39,10 +34,10 @@
     <div class="metric-selector" id="metric-selector">
         <button class="metric-btn active" onclick="changeMetric('sales', this)">総売上</button>
         <button class="metric-btn" onclick="changeMetric('shimeiSales', this)">指名売上</button>
-        <button class="metric-btn" onclick="changeMetric('shimeiCount', this)">指名客数</button>
-        <button class="metric-btn" onclick="changeMetric('nextReserve', this)">次回予約率</button>
         <button class="metric-btn" onclick="changeMetric('timePrice', this)">時間単価</button>
+        <button class="metric-btn" onclick="changeMetric('shimeiCount', this)">指名客数</button>
         <button class="metric-btn" onclick="changeMetric('newCount', this)">新規客数</button>
+        <button class="metric-btn" onclick="changeMetric('nextReserve', this)">次回予約率</button>
         <button class="metric-btn" onclick="changeMetric('newRepeat', this)">新規再来率</button>
     </div>
 
@@ -67,6 +62,17 @@
     let selectedKeys = []; 
     let currentMetric = 'sales';
 
+    // 指標ごとのフォーマットルール
+    const formats = {
+        sales: { unit: '￥', suffix: '', decimal: 0 },
+        shimeiSales: { unit: '￥', suffix: '', decimal: 0 },
+        timePrice: { unit: '￥', suffix: '', decimal: 0 },
+        shimeiCount: { unit: '', suffix: '名', decimal: 0 },
+        newCount: { unit: '', suffix: '名', decimal: 0 },
+        nextReserve: { unit: '', suffix: '％', decimal: 2 },
+        newRepeat: { unit: '', suffix: '％', decimal: 2 }
+    };
+
     async function init() {
         try {
             const res = await fetch(`${GAS_URL}?userId=${currentUserId}`);
@@ -75,7 +81,6 @@
                 const myName = allData.myInfo.userName;
                 const myStore = allData.staffList.find(s => s.name === myName)?.store;
                 selectedKeys = allData.staffList.filter(s => s.store === myStore).map(s => s.name);
-
                 renderDropdown(myStore);
                 updateChart();
                 document.getElementById('loading').style.display = 'none';
@@ -126,6 +131,14 @@
         updateChart();
     }
 
+    function formatVal(val) {
+        const f = formats[currentMetric];
+        // ％表記の場合は値を100倍して表示（スプシが0.85なら85.00とする場合）
+        // スプシですでに整数（85）ならそのままでOK。今回はスプシの値をそのまま整形。
+        let displayVal = val.toFixed(f.decimal);
+        return f.unit + displayVal.toLocaleString() + f.suffix;
+    }
+
     function updateChart() {
         const ctx = document.getElementById('salesChart').getContext('2d');
         if (myChart) myChart.destroy();
@@ -148,10 +161,26 @@
                 responsive: true, maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
                 scales: { 
-                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#aaa', font: { size: 10 } } },
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: 'rgba(255,255,255,0.05)' }, 
+                        ticks: { 
+                            color: '#aaa', font: { size: 9 },
+                            callback: function(value) { return formatVal(value); } // Y軸の目盛り
+                        } 
+                    },
                     x: { ticks: { color: '#aaa', font: { size: 10 } } }
                 },
-                plugins: { legend: { position: 'bottom', labels: { color: '#fff', boxWidth: 8, font: { size: 9 } } } }
+                plugins: { 
+                    legend: { position: 'bottom', labels: { color: '#fff', boxWidth: 8, font: { size: 9 } } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + formatVal(context.parsed.y);
+                            }
+                        }
+                    }
+                }
             }
         });
     }
