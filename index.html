@@ -6,38 +6,40 @@
     <title>Management Dashboard 2026</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
     <style>
         :root { --bg: #121212; --card: #1e1e1e; --gold: #d4af37; --white: #ffffff; --gray: #2a2a2a; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--white); margin: 0; padding-bottom: 50px; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--white); margin: 0; overflow: hidden; }
         header { padding: 15px; background: var(--card); border-bottom: 1px solid #333; text-align: center; color: var(--gold); font-weight: bold; letter-spacing: 2px; }
-        .container { width: 94%; max-width: 500px; margin: 10px auto; }
+        .container { width: 94%; max-width: 500px; margin: 10px auto; padding-bottom: 60px; }
         
-        /* 年度選択 */
-        .year-selector { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; }
+        /* スワイプ設定 */
+        .swiper { width: 100%; height: 100vh; }
+        .swiper-slide { height: 100%; overflow-y: auto; }
+
+        /* 共通パーツ */
+        .year-selector { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; }
         .year-btn { padding: 6px 15px; border-radius: 20px; background: var(--gray); border: 1px solid #444; color: #aaa; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
         .year-btn.active { background: #444; color: var(--gold); border-color: var(--gold); }
 
-        /* 指標選択 */
-        .metric-selector { display: flex; overflow-x: auto; gap: 8px; padding: 5px 0 15px 0; scrollbar-width: none; }
+        .metric-selector { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 12px; scrollbar-width: none; }
         .metric-btn { white-space: nowrap; padding: 10px 18px; border-radius: 10px; background: var(--gray); border: 1px solid #444; color: #aaa; font-size: 0.8rem; cursor: pointer; }
         .metric-btn.active { background: var(--gold); color: #000; font-weight: bold; }
 
-        /* スタッフ選択 */
         .select-box { background: var(--card); border: 1px solid #444; padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 0.85rem; margin-bottom: 10px; }
         .dropdown { display: none; background: var(--card); border: 1px solid #444; border-radius: 10px; padding: 5px; max-height: 400px; overflow-y: auto; position: absolute; width: 90%; max-width: 470px; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         
         .store-header { background: rgba(212, 175, 55, 0.1); padding: 10px; color: var(--gold); font-weight: bold; font-size: 0.85rem; display: flex; align-items: center; gap: 10px; }
         .staff-option { padding: 12px 10px 12px 40px; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
         
-        .chart-card { background: var(--card); border-radius: 15px; padding: 10px; border: 1px solid rgba(212, 175, 55, 0.2); height: 350px; margin-top: 10px; }
+        .chart-card { background: var(--card); border-radius: 15px; padding: 10px; border: 1px solid rgba(212, 175, 55, 0.2); height: 320px; margin-top: 10px; }
 
-        /* カードデザイン */
+        /* カード */
         .stats-container { margin-top: 25px; }
         .stats-title { font-size: 0.8rem; color: var(--gold); margin-bottom: 12px; font-weight: bold; letter-spacing: 1px; }
-        .stat-card { 
-            background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 10px;
-            border-left: 4px solid var(--gold); box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-        }
+        .stat-card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 10px; border-left: 4px solid var(--gold); box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
         .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; border-top: 1px solid #333; margin-top: 10px; padding-top: 10px;}
         .data-item { display: flex; flex-direction: column; }
         .data-label { font-size: 0.65rem; color: #aaa; margin-bottom: 2px; }
@@ -46,57 +48,85 @@
         .stat-name { font-size: 0.95rem; font-weight: bold; }
         .stat-row { display: flex; justify-content: space-between; align-items: center; }
 
-        #loading { text-align: center; margin-top: 80px; color: var(--gold); }
+        #loading { text-align: center; margin-top: 80px; color: var(--gold); position: absolute; width: 100%; z-index: 9999; }
         input[type="checkbox"] { transform: scale(1.3); accent-color: var(--gold); }
         label { cursor: pointer; flex-grow: 1; }
+        
+        /* ページポインター */
+        .swiper-pagination-bullet { background: #555; opacity: 1; }
+        .swiper-pagination-bullet-active { background: var(--gold); }
     </style>
 </head>
 <body>
 
-<header>DASHBOARD 2026</header>
+<div id="loading"><i class="fas fa-circle-notch fa-spin fa-2x"></i><p>Loading Data...</p></div>
 
-<div id="loading"><i class="fas fa-circle-notch fa-spin fa-2x"></i><p>Loading...</p></div>
+<div class="swiper">
+    <div class="swiper-wrapper">
+        
+        <div class="swiper-slide">
+            <header>SALES DASHBOARD</header>
+            <div class="container">
+                <div class="year-selector" id="year-selector-1"></div>
+                <div class="metric-selector">
+                    <button class="metric-btn active" onclick="changeMetric('sales', this)">総売上</button>
+                    <button class="metric-btn" onclick="changeMetric('shimeiSales', this)">指名売上</button>
+                    <button class="metric-btn" onclick="changeMetric('timePrice', this)">時間単価</button>
+                    <button class="metric-btn" onclick="changeMetric('shimeiCount', this)">指名客数</button>
+                    <button class="metric-btn" onclick="changeMetric('nextReserve', this)">次回予約率</button>
+                    <button class="metric-btn" onclick="changeMetric('newRepeat', this)">新規再来率</button>
+                </div>
+                <div class="select-box" onclick="toggleDropdown('sales-drop')">
+                    <span id="sales-label">スタッフを選択</span><i class="fas fa-users"></i>
+                </div>
+                <div id="sales-drop" class="dropdown"></div>
+                <div class="chart-card"><canvas id="salesChart"></canvas></div>
+                <div class="stats-container">
+                    <div class="stats-title" id="sales-title">実績データ</div>
+                    <div id="sales-cards-list"></div>
+                </div>
+            </div>
+        </div>
 
-<div class="container" id="main-content" style="display: none;">
-    <div class="year-selector" id="year-selector"></div>
+        <div class="swiper-slide">
+            <header>COST DASHBOARD</header>
+            <div class="container">
+                <div class="year-selector" id="year-selector-2"></div>
+                <div class="metric-selector">
+                    <button class="metric-btn active" onclick="changeMatMetric('totalRate', this)">全体材料費率</button>
+                    <button class="metric-btn" onclick="changeMatMetric('techRate', this)">技術材料費率</button>
+                </div>
+                <div class="select-box" onclick="toggleDropdown('mat-drop')">
+                    <span id="mat-label">店舗を選択</span><i class="fas fa-store"></i>
+                </div>
+                <div id="mat-drop" class="dropdown"></div>
+                <div class="chart-card"><canvas id="matChart"></canvas></div>
+                <div class="stats-container">
+                    <div class="stats-title" id="mat-title">材料費実績</div>
+                    <div id="mat-cards-list"></div>
+                </div>
+            </div>
+        </div>
 
-    <div class="metric-selector" id="metric-selector">
-        <button class="metric-btn active" onclick="changeMetric('sales', this)">総売上</button>
-        <button class="metric-btn" onclick="changeMetric('shimeiSales', this)">指名売上</button>
-        <button class="metric-btn" onclick="changeMetric('timePrice', this)">時間単価</button>
-        <button class="metric-btn" onclick="changeMetric('shimeiCount', this)">指名客数</button>
-        <button class="metric-btn" onclick="changeMetric('nextReserve', this)">次回予約率</button>
-        <button class="metric-btn" onclick="changeMetric('newRepeat', this)">新規再来率</button>
     </div>
-
-    <div class="select-box" onclick="toggleDropdown()">
-        <span id="filter-label">スタッフを選択</span><i class="fas fa-users"></i>
-    </div>
-    <div id="filter-dropdown" class="dropdown"></div>
-
-    <div class="chart-card"><canvas id="salesChart"></canvas></div>
-
-    <div class="stats-container">
-        <div class="stats-title" id="stats-title">実績データ</div>
-        <div id="stat-cards-list"></div>
-    </div>
+    <div class="swiper-pagination"></div>
 </div>
 
 <script>
     const GAS_URL = "https://script.google.com/a/macros/senryoyakusha.com/s/AKfycbxAzSojBu5Tjzjge2akg4d_VKGdl6ZCYoEjaRRKiZaRI5DXfFEdkH8MKwW2eI2UgCc/exec";
     const currentUserId = "user_gps3atgzq"; 
-    
-    const BASE_COLORS = [
-        'rgba(212, 175, 55', 'rgba(52, 152, 219', 'rgba(231, 76, 60', 'rgba(46, 204, 113', 
-        'rgba(155, 89, 182', 'rgba(241, 196, 15', 'rgba(26, 188, 156', 'rgba(230, 126, 34'
-    ];
+    const BASE_COLORS = ['rgba(212, 175, 55', 'rgba(52, 152, 219', 'rgba(231, 76, 60', 'rgba(46, 204, 113', 'rgba(155, 89, 182', 'rgba(241, 196, 15', 'rgba(26, 188, 156', 'rgba(230, 126, 34'];
 
-    let allData = null, myChart = null, selectedKeys = [], selectedYears = [], currentMetric = 'sales';
+    let allData = null, salesChart = null, matChart = null;
+    let selectedKeys = [], selectedYears = [], selectedStores = [], currentMetric = 'sales', currentMatMetric = 'totalRate';
+    
     const formats = {
         sales: { u: '￥', s: '', d: 0 }, shimeiSales: { u: '￥', s: '', d: 0 }, timePrice: { u: '￥', s: '', d: 0 },
         shimeiCount: { u: '', s: '名', d: 0 }, nextReserve: { u: '', s: '％', d: 2 }, newRepeat: { u: '', s: '％', d: 2 },
-        forecast: { u: '￥', s: '', d: 0 }
+        forecast: { u: '￥', s: '', d: 0 }, totalRate: { u: '', s: '％', d: 2 }, techRate: { u: '', s: '％', d: 2 }
     };
+
+    const swiper = new Swiper('.swiper', { pagination: { el: '.swiper-pagination' }, edgeSwipeDetection: true });
 
     async function init() {
         try {
@@ -104,197 +134,132 @@
             allData = await res.json();
             if (allData.status === 'success') {
                 selectedYears = [allData.yearList[0]];
-                const myName = allData.myInfo.userName;
-                const myStore = allData.staffList.find(s => s.name === myName)?.store;
+                const myStore = allData.staffList.find(s => s.name === allData.myInfo.userName)?.store || allData.storeList[0];
                 selectedKeys = allData.staffList.filter(s => s.store === myStore).map(s => s.name);
+                selectedStores = [myStore];
+
+                renderYearSelectors();
+                renderSalesDropdown(myStore);
+                renderMatDropdown(myStore);
+                updateSalesDisplay();
+                updateMatDisplay();
                 
-                renderYearSelector();
-                renderDropdown(myStore);
-                updateDisplay();
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('main-content').style.display = 'block';
             }
         } catch (e) { console.error(e); }
     }
 
-    function renderYearSelector() {
-        const container = document.getElementById('year-selector');
-        container.innerHTML = allData.yearList.map(y => `
-            <button class="year-btn ${selectedYears.includes(y) ? 'active' : ''}" onclick="toggleYear('${y}', this)">${y}年</button>
-        `).join('');
+    function renderYearSelectors() {
+        const html = allData.yearList.map(y => `<button class="year-btn ${selectedYears.includes(y) ? 'active' : ''}" onclick="toggleYear('${y}')">${y}年</button>`).join('');
+        document.getElementById('year-selector-1').innerHTML = html;
+        document.getElementById('year-selector-2').innerHTML = html;
     }
 
-    function toggleYear(year, btn) {
-        if (selectedYears.includes(year)) {
-            if (selectedYears.length > 1) selectedYears = selectedYears.filter(y => y !== year);
-        } else {
-            selectedYears.push(year);
-        }
+    function toggleYear(year) {
+        if (selectedYears.includes(year)) { if (selectedYears.length > 1) selectedYears = selectedYears.filter(y => y !== year); }
+        else { selectedYears.push(year); }
         selectedYears.sort().reverse();
-        renderYearSelector();
-        updateDisplay();
+        renderYearSelectors();
+        updateSalesDisplay();
+        updateMatDisplay();
     }
 
-    function toggleDropdown() {
-        const el = document.getElementById('filter-dropdown');
+    function toggleDropdown(id) {
+        const el = document.getElementById(id);
         el.style.display = el.style.display === 'block' ? 'none' : 'block';
     }
 
-    function renderDropdown(myStore) {
-        const container = document.getElementById('filter-dropdown');
-        const sortedStores = [...allData.storeList].sort((a, b) => (a === myStore ? -1 : b === myStore ? 1 : 0));
+    function renderSalesDropdown(myStore) {
+        const container = document.getElementById('sales-drop');
         let html = "";
-        sortedStores.forEach(store => {
-            html += `
-                <div class="store-group">
-                    <div class="store-header">
-                        <input type="checkbox" id="store-${store}" onchange="toggleStoreGroup('${store}', this)">
-                        <label for="store-${store}">${store} (チーム全員)</label>
-                    </div>`;
+        allData.storeList.forEach(store => {
+            html += `<div class="store-header"><input type="checkbox" id="s-${store}" onchange="toggleSalesStore('${store}', this)"><label for="s-${store}">${store}</label></div>`;
             allData.staffList.filter(s => s.store === store).forEach(s => {
-                html += `
-                    <div class="staff-option">
-                        <input type="checkbox" class="staff-chk" data-store="${store}" value="${s.name}" 
-                            ${selectedKeys.includes(s.name) ? 'checked' : ''} onchange="handleStaffChange()">
-                        <label onclick="this.previousElementSibling.click()">${s.name}</label>
-                    </div>`;
+                html += `<div class="staff-option"><input type="checkbox" class="s-chk" data-store="${store}" value="${s.name}" ${selectedKeys.includes(s.name) ? 'checked' : ''} onchange="handleSalesChange()"><label>${s.name}</label></div>`;
             });
-            html += `</div>`;
         });
         container.innerHTML = html;
-        updateLabel();
+        updateSalesLabel();
     }
 
-    function toggleStoreGroup(store, el) {
-        document.querySelectorAll(`.staff-chk[data-store="${store}"]`).forEach(c => c.checked = el.checked);
-        handleStaffChange();
+    function renderMatDropdown(myStore) {
+        const container = document.getElementById('mat-drop');
+        container.innerHTML = allData.storeList.map(store => `
+            <div class="store-header">
+                <input type="checkbox" class="m-chk" value="${store}" ${selectedStores.includes(store) ? 'checked' : ''} onchange="handleMatChange()">
+                <label>${store}</label>
+            </div>
+        `).join('');
+        updateMatLabel();
     }
 
-    function handleStaffChange() {
-        selectedKeys = Array.from(document.querySelectorAll('.staff-chk:checked')).map(c => c.value);
-        updateLabel(); updateDisplay();
-    }
+    function toggleSalesStore(store, el) { document.querySelectorAll(`.s-chk[data-store="${store}"]`).forEach(c => c.checked = el.checked); handleSalesChange(); }
+    function handleSalesChange() { selectedKeys = Array.from(document.querySelectorAll('.s-chk:checked')).map(c => c.value); updateSalesLabel(); updateSalesDisplay(); }
+    function handleMatChange() { selectedStores = Array.from(document.querySelectorAll('.m-chk:checked')).map(c => c.value); updateMatLabel(); updateMatDisplay(); }
+    function updateSalesLabel() { document.getElementById('sales-label').innerText = selectedKeys.length + "名を選択中"; }
+    function updateMatLabel() { document.getElementById('mat-label').innerText = selectedStores.length + "店舗を選択中"; }
 
-    function updateLabel() { document.getElementById('filter-label').innerText = selectedKeys.length + "名を選択中"; }
+    function changeMetric(m, btn) { document.querySelectorAll('.metric-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentMetric = m; updateSalesDisplay(); }
+    function changeMatMetric(m, btn) { document.querySelectorAll('.metric-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentMatMetric = m; updateMatDisplay(); }
 
-    function changeMetric(metric, btn) {
-        document.querySelectorAll('.metric-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentMetric = metric;
-        updateDisplay();
-    }
-
-    function getFormatted(val, metric = currentMetric) {
+    function getFormatted(val, metric) {
         const f = formats[metric];
         return f.u + Number(val).toLocaleString(undefined, {minimumFractionDigits: f.d, maximumFractionDigits: f.d}) + (f.s || '');
     }
 
-    function updateDisplay() {
-        updateChart();
-        updateCards();
+    function updateSalesDisplay() { updateSalesChart(); updateSalesCards(); }
+    function updateMatDisplay() { updateMatChart(); updateMatCards(); }
+
+    function updateSalesCards() {
+        const list = document.getElementById('sales-cards-list');
+        const year = selectedYears[0]; const month = new Date().getMonth();
+        document.getElementById('sales-title').innerText = (currentMetric === 'sales') ? `${year}年 ${month+1}月 予測vs実績` : `${year}年 ${month+1}月 実績`;
+        list.innerHTML = selectedKeys.map((name, i) => {
+            const val = allData.chartData[year]?.[name]?.[currentMetric]?.[month] || 0;
+            const forecast = allData.chartData[year]?.[name]?.['forecast']?.[month] || 0;
+            const color = `rgba(${BASE_COLORS[i % BASE_COLORS.length]}, 1)`;
+            if (currentMetric === 'sales') return `<div class="stat-card" style="border-left-color:${color}"><span class="stat-name">${name}</span><div class="comparison-grid"><div class="data-item"><span class="data-label">予測</span><span class="data-value sub">${getFormatted(forecast,'forecast')}</span></div><div class="data-item"><span class="data-label">実績</span><span class="data-value">${getFormatted(val, currentMetric)}</span></div></div></div>`;
+            return `<div class="stat-card" style="border-left-color:${color}"><div class="stat-row"><span class="stat-name">${name}</span><span class="data-value">${getFormatted(val, currentMetric)}</span></div></div>`;
+        }).join('');
     }
 
-    function updateCards() {
-        const listContainer = document.getElementById('stat-cards-list');
-        const titleContainer = document.getElementById('stats-title');
-        const latestYear = selectedYears[0];
-        const monthIdx = new Date().getMonth();
-        const monthName = (monthIdx + 1) + '月';
+    function updateMatCards() {
+        const list = document.getElementById('mat-cards-list');
+        const year = selectedYears[0]; const month = new Date().getMonth();
+        list.innerHTML = selectedStores.map((store, i) => {
+            const val = allData.materialData[year]?.[store]?.[currentMatMetric]?.[month] || 0;
+            return `<div class="stat-card" style="border-left-color:rgba(${BASE_COLORS[i % BASE_COLORS.length]},1)"><div class="stat-row"><span class="stat-name">${store}</span><span class="data-value">${getFormatted(val, currentMatMetric)}</span></div></div>`;
+        }).join('');
+    }
 
-        titleContainer.innerText = (currentMetric === 'sales') ? `${latestYear}年 ${monthName} 売上予測 vs 実績` : `${latestYear}年 ${monthName} 実績データ`;
-
-        let html = "";
+    function updateSalesChart() {
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        if (salesChart) salesChart.destroy();
+        const datasets = [];
         selectedKeys.forEach((name, i) => {
-            const val = allData.chartData[latestYear]?.[name]?.[currentMetric]?.[monthIdx] || 0;
-            const forecast = allData.chartData[latestYear]?.[name]?.['forecast']?.[monthIdx] || 0;
-
-            if (currentMetric === 'sales') {
-                html += `
-                    <div class="stat-card" style="border-left-color: rgba(${BASE_COLORS[i % BASE_COLORS.length]}, 1)">
-                        <span class="stat-name">${name}</span>
-                        <div class="comparison-grid">
-                            <div class="data-item">
-                                <span class="data-label">売上予測</span>
-                                <span class="data-value sub">${getFormatted(forecast, 'forecast')}</span>
-                            </div>
-                            <div class="data-item">
-                                <span class="data-label">現在実績</span>
-                                <span class="data-value">${getFormatted(val)}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                html += `
-                    <div class="stat-card" style="border-left-color: rgba(${BASE_COLORS[i % BASE_COLORS.length]}, 1)">
-                        <div class="stat-row">
-                            <span class="stat-name">${name}</span>
-                            <span class="data-value">${getFormatted(val)}</span>
-                        </div>
-                    </div>
-                `;
-            }
-        });
-        listContainer.innerHTML = html || '<p style="text-align:center;color:#666;">スタッフ未選択</p>';
-    }
-
-    function updateChart() {
-    const ctx = document.getElementById('salesChart').getContext('2d');
-    if (myChart) myChart.destroy();
-
-    const datasets = [];
-    selectedKeys.forEach((name, i) => {
-        const baseColor = BASE_COLORS[i % BASE_COLORS.length];
-        selectedYears.forEach((year, yIdx) => {
-            const opacity = 1.0 - (yIdx * 0.4);
-            const color = `${baseColor}, ${Math.max(opacity, 0.2)})`;
-            const data = allData.chartData[year]?.[name]?.[currentMetric] || new Array(12).fill(0);
-            
-            datasets.push({
-                label: `${name} (${year})`,
-                data: data,
-                borderColor: color,
-                backgroundColor: color,
-                borderWidth: yIdx === 0 ? 3 : 1.5,
-                pointRadius: yIdx === 0 ? 4 : 2,
-                // --- タップ感の改善点1: 点の反応範囲を拡大 ---
-                pointHitRadius: 30, 
-                tension: 0.3,
-                fill: false
+            const base = BASE_COLORS[i % BASE_COLORS.length];
+            selectedYears.forEach((year, yIdx) => {
+                const color = `${base}, ${Math.max(1-(yIdx*0.4), 0.2)})`;
+                datasets.push({ label: `${name}(${year})`, data: allData.chartData[year]?.[name]?.[currentMetric] || new Array(12).fill(0), borderColor: color, backgroundColor: color, borderWidth: yIdx===0?3:1.5, pointRadius: yIdx===0?4:2, pointHitRadius: 30, tension: 0.3 });
             });
         });
-    });
+        salesChart = new Chart(ctx, { type: 'line', data: { labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => getFormatted(v, currentMetric), color: '#aaa', font: { size: 9 } } } }, plugins: { legend: { display: false } } } });
+    }
 
-    myChart = new Chart(ctx, {
-        type: 'line',
-        data: { labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            // --- タップ感の改善点2: 垂直線上のどこを触っても反応させる ---
-            interaction: {
-                mode: 'index',
-                intersect: false, 
-            },
-            scales: { 
-                y: { 
-                    grid: { color: 'rgba(255,255,255,0.05)' }, 
-                    ticks: { callback: v => getFormatted(v), color: '#aaa', font: { size: 9 } } 
-                },
-                x: { 
-                    ticks: { color: '#aaa', font: { size: 10 } } 
-                }
-            },
-            plugins: { 
-                legend: { display: false }, 
-                tooltip: { 
-                    enabled: true,
-                    callbacks: { label: c => c.dataset.label + ': ' + getFormatted(c.parsed.y) } 
-                } 
-            }
-        }
-    });
-}
+    function updateMatChart() {
+        const ctx = document.getElementById('matChart').getContext('2d');
+        if (matChart) matChart.destroy();
+        const datasets = [];
+        selectedStores.forEach((store, i) => {
+            const base = BASE_COLORS[i % BASE_COLORS.length];
+            selectedYears.forEach((year, yIdx) => {
+                const color = `${base}, ${Math.max(1-(yIdx*0.4), 0.2)})`;
+                datasets.push({ label: `${store}(${year})`, data: allData.materialData[year]?.[store]?.[currentMatMetric] || new Array(12).fill(0), borderColor: color, backgroundColor: color, borderWidth: yIdx===0?3:1.5, pointRadius: yIdx===0?4:2, pointHitRadius: 30, tension: 0.3 });
+            });
+        });
+        matChart = new Chart(ctx, { type: 'line', data: { labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => getFormatted(v, currentMatMetric), color: '#aaa', font: { size: 9 } } } }, plugins: { legend: { display: false } } } });
+    }
+
     init();
 </script>
 </body>
