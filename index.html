@@ -77,30 +77,89 @@
         });
     }
 
+    /**
+     * 折れ線グラフを描画
+     */
     function renderChart(targetName) {
         const ctx = document.getElementById('salesChart').getContext('2d');
         const labels = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
         
+        // 既存のグラフがあれば破棄（再描画のため）
+        if (myChart) {
+            myChart.destroy();
+        }
+
         myChart = new Chart(ctx, {
-            type: 'bar',
+            type: 'line', // 折れ線グラフに変更
             data: {
                 labels: labels,
                 datasets: [{
                     label: targetName + ' 売上 (2026)',
                     data: allData.chartData[targetName],
-                    backgroundColor: '#d4af37',
-                    borderRadius: 5
+                    // --- デザイン設定 ---
+                    borderColor: '#d4af37',       /* 線の色：ゴールド */
+                    backgroundColor: 'rgba(212, 175, 55, 0.1)', /* 線の下の塗りつぶし色：ゴールド（透過） */
+                    borderWidth: 3,               /* 線の太さ */
+                    pointBackgroundColor: '#fff', /* 点の背景色：白 */
+                    pointBorderColor: '#d4af37', /* 点の枠線色：ゴールド */
+                    pointRadius: 5,               /* 点の大きさ */
+                    pointHoverRadius: 7,          /* ホバー時の点の大きさ */
+                    tension: 0.3,                 /* 線のカーブ具合（0だと直線） */
+                    fill: true                    /* 線の下を塗りつぶす */
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false, // スマホの縦幅に合わせる
                 scales: {
-                    y: { beginAtZero: true, grid: { color: '#333' }, ticks: { color: '#aaa' } },
-                    x: { grid: { display: false }, ticks: { color: '#aaa' } }
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }, /* グリッド線を薄く */
+                        ticks: { color: '#aaa', font: { size: 10 } }  /* フォントサイズ調整 */
+                    },
+                    x: { 
+                        grid: { display: false }, /* X軸のグリッド線は非表示 */
+                        ticks: { color: '#aaa', font: { size: 10 } }
+                    }
                 },
-                plugins: { legend: { display: false } }
+                plugins: { 
+                    legend: { display: false }, // 凡例は非表示
+                    tooltip: {                 /* ホバー時のツールチップ */
+                        backgroundColor: 'rgba(30, 30, 30, 0.9)',
+                        titleColor: '#d4af37',
+                        bodyColor: '#fff',
+                        borderColor: '#d4af37',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    // 金額形式にフォーマット（例: 1,000,000円）
+                                    label += new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
             }
         });
+    }
+
+    /**
+     * スタッフ選択時のグラフ更新処理（ここも少しだけ修正）
+     */
+    function updateChart(name, el) {
+        // チップのスタイルを切り替え
+        document.querySelectorAll('.staff-chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        
+        // 折れ線グラフ用に、グラフを一度破棄して再描画（または、データを更新してアニメーション）
+        // アニメーションを優先するなら myChart.update() ですが、線の太さなどが崩れる場合があるため再描画が安全です
+        renderChart(name); 
     }
 
     function updateChart(name, el) {
