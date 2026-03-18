@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Management Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --card-bg: #1e1e1e;
+            --gold: #d4af37;
+            --text-gray: #a0a0a0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-dark);
+            color: #ffffff;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        header {
+            width: 100%;
+            padding: 20px 0;
+            background: var(--card-bg);
+            border-bottom: 1px solid #333;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            letter-spacing: 3px;
+            color: var(--gold);
+        }
+        .container {
+            width: 90%;
+            max-width: 450px;
+            margin-top: 40px;
+        }
+        .metric-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px 20px;
+            text-align: center;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .label {
+            font-size: 0.8rem;
+            color: var(--text-gray);
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+        .value {
+            font-size: 4rem;
+            font-weight: bold;
+            color: var(--gold);
+            margin-bottom: 10px;
+        }
+        .status-bar {
+            font-size: 0.7rem;
+            color: var(--text-gray);
+            margin-top: 20px;
+        }
+        #loading {
+            margin-top: 100px;
+            text-align: center;
+            color: var(--gold);
+        }
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: var(--gold);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-title">DASHBOARD</div>
+</header>
+
+<div class="container">
+    <div id="loading">
+        <i class="fas fa-spinner fa-spin fa-2x"></i>
+        <p>Loading Data...</p>
+    </div>
+
+    <div id="dashboard-content" style="display: none;">
+        <div class="metric-card">
+            <div class="label">CURRENT VALUE (C67)</div>
+            <div class="value" id="c67-value">0</div>
+            <div class="status-bar" id="last-update">---</div>
+        </div>
+    </div>
+</div>
+
+<div class="refresh-btn" onclick="fetchData()">
+    <i class="fas fa-sync-alt" style="color: #000; font-size: 1.4rem;"></i>
+</div>
+
+<script>
+    const GAS_URL = "https://script.google.com/a/macros/senryoyakusha.com/s/AKfycbxAzSojBu5Tjzjge2akg4d_VKGdl6ZCYoEjaRRKiZaRI5DXfFEdkH8MKwW2eI2UgCc/exec";
+
+    async function fetchData() {
+        const loadingEl = document.getElementById('loading');
+        const contentEl = document.getElementById('dashboard-content');
+        
+        loadingEl.style.display = 'block';
+        contentEl.style.display = 'none';
+
+        try {
+            const response = await fetch(GAS_URL);
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                document.getElementById('c67-value').innerText = data.metrics.target_cell_c67;
+                document.getElementById('last-update').innerText = "Last Updated: " + data.updatedAt;
+                
+                loadingEl.style.display = 'none';
+                contentEl.style.display = 'block';
+            }
+        } catch (error) {
+            console.error("Fetch error:", error);
+            loadingEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i><p>Connection Error</p>';
+        }
+    }
+
+    window.onload = fetchData;
+</script>
+
+</body>
+</html>
