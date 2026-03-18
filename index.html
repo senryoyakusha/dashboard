@@ -7,106 +7,38 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root {
-            --bg-dark: #121212;
-            --card-bg: #1e1e1e;
-            --gold: #d4af37;
-            --text-gray: #a0a0a0;
-        }
+        :root { --bg: #121212; --card: #1e1e1e; --gold: #d4af37; --text: #a0a0a0; }
+        body { font-family: sans-serif; background: var(--bg); color: #fff; margin: 0; padding-bottom: 30px; }
+        header { padding: 20px; background: var(--card); border-bottom: 1px solid #333; text-align: center; color: var(--gold); font-weight: bold; letter-spacing: 2px; }
+        .container { width: 92%; max-width: 500px; margin: 20px auto; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-dark);
-            color: #ffffff;
-            margin: 0;
-            padding-bottom: 30px;
-        }
+        /* セレクター */
+        .select-box { background: var(--card); border: 1px solid var(--gold); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; cursor: pointer; }
+        .dropdown { display: none; background: var(--card); border: 1px solid #444; border-radius: 12px; padding: 10px; margin-bottom: 20px; max-height: 300px; overflow-y: auto; }
+        .option { padding: 12px; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 12px; }
+        .option input { transform: scale(1.4); accent-color: var(--gold); }
 
-        header {
-            padding: 20px;
-            background: var(--card-bg);
-            border-bottom: 1px solid #333;
-            text-align: center;
-            color: var(--gold);
-            font-weight: bold;
-            letter-spacing: 2px;
-        }
-
-        .container {
-            width: 92%;
-            max-width: 500px;
-            margin: 20px auto;
-        }
-
-        /* スタッフ選択エリア */
-        .selection-area {
-            margin-bottom: 20px;
-        }
-
-        .select-trigger {
-            background: var(--card-bg);
-            border: 1px solid var(--gold);
-            padding: 15px;
-            border-radius: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .dropdown-menu {
-            display: none;
-            background: var(--card-bg);
-            border: 1px solid #444;
-            border-radius: 12px;
-            margin-top: 5px;
-            max-height: 250px;
-            overflow-y: auto;
-            padding: 10px;
-        }
-
-        .staff-option {
-            padding: 12px;
-            border-bottom: 1px solid #333;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .staff-option input[type="checkbox"] {
-            transform: scale(1.5);
-            accent-color: var(--gold);
-        }
-
-        /* グラフエリア */
-        .chart-card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 15px;
-            border: 1px solid rgba(212, 175, 55, 0.2);
-            height: 400px;
-        }
-
+        .chart-card { background: var(--card); border-radius: 20px; padding: 15px; border: 1px solid rgba(212, 175, 55, 0.2); height: 400px; }
         #loading { text-align: center; margin-top: 50px; color: var(--gold); }
     </style>
 </head>
 <body>
 
-<header>SALES TREND 2026</header>
+<header>PREMIUM DASHBOARD</header>
 
-<div id="loading"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
+<div id="loading"><i class="fas fa-circle-notch fa-spin fa-2x"></i></div>
 
 <div class="container" id="main-content" style="display: none;">
     
-    <div class="selection-area">
-        <div class="select-trigger" onclick="toggleDropdown()">
-            <span id="selected-staff-label">表示スタッフを選択</span>
-            <i class="fas fa-chevron-down"></i>
-        </div>
-        <div id="staff-dropdown" class="dropdown-menu">
-            </div>
+    <div class="select-box" onclick="toggleDisplay('store-dropdown')">
+        <span id="store-label">店舗を選択</span><i class="fas fa-store"></i>
     </div>
+    <div id="store-dropdown" class="dropdown"></div>
+
+    <div class="select-box" onclick="toggleDisplay('staff-dropdown')">
+        <span id="staff-label">スタッフを比較</span><i class="fas fa-users"></i>
+    </div>
+    <div id="staff-dropdown" class="dropdown"></div>
 
     <div class="chart-card">
         <canvas id="salesChart"></canvas>
@@ -115,95 +47,131 @@
 
 <script>
     const GAS_URL = "https://script.google.com/a/macros/senryoyakusha.com/s/AKfycbxAzSojBu5Tjzjge2akg4d_VKGdl6ZCYoEjaRRKiZaRI5DXfFEdkH8MKwW2eI2UgCc/exec";
-    const userId = "user_gps3atgzq"; // PCテスト用
+    const userId = "user_gps3atgzq"; 
+
+    // 10パターンのカラーパレット
+    const CHART_COLORS = [
+        '#d4af37', // Gold (店舗/メイン)
+        '#3498db', // Blue
+        '#e74c3c', // Red
+        '#2ecc71', // Green
+        '#9b59b6', // Purple
+        '#f1c40f', // Yellow
+        '#1abc9c', // Teal
+        '#e67e22', // Orange
+        '#ecf0f1', // Silver
+        '#ff69b4'  // Pink
+    ];
 
     let allData = null;
     let myChart = null;
+    let currentStore = "";
     let selectedStaffs = [];
 
-    async function fetchData() {
+    async function init() {
         try {
             const res = await fetch(`${GAS_URL}?userId=${userId}`);
             allData = await res.json();
-            
             if (allData.status === 'success') {
-                // デフォルト選択（自分の名前を探すロジックはGAS側から渡されたユーザー情報で行う）
-                // ここでは仮に最初のスタッフを選択
-                selectedStaffs = ["店舗全体"];
-                renderDropdown(allData.staffList);
-                renderChart();
+                renderStoreOptions();
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
             }
         } catch (e) { console.error(e); }
     }
 
-    function toggleDropdown() {
-        const menu = document.getElementById('staff-dropdown');
-        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    function toggleDisplay(id) {
+        const el = document.getElementById(id);
+        el.style.display = el.style.display === 'block' ? 'none' : 'block';
     }
 
-    function renderDropdown(list) {
-        const menu = document.getElementById('staff-dropdown');
-        const items = ["店舗全体", ...list];
-        
-        menu.innerHTML = items.map(name => `
-            <div class="staff-option">
-                <input type="checkbox" id="chk-${name}" value="${name}" 
-                    ${selectedStaffs.includes(name) ? 'checked' : ''} 
-                    onchange="handleSelectionChange()">
-                <label for="chk-${name}">${name}</label>
+    function renderStoreOptions() {
+        const container = document.getElementById('store-dropdown');
+        container.innerHTML = allData.storeList.map(name => `
+            <div class="option" onclick="selectStore('${name}')">${name}</div>
+        `).join('');
+    }
+
+    function selectStore(name) {
+        currentStore = name;
+        selectedStaffs = []; // 店舗を変えたらスタッフ選択をリセット
+        document.getElementById('store-label').innerText = name;
+        document.getElementById('store-dropdown').style.display = 'none';
+        renderStaffOptions();
+        updateChart();
+    }
+
+    function renderStaffOptions() {
+        const container = document.getElementById('staff-dropdown');
+        // その店舗に所属するスタッフのみ抽出
+        const filtered = allData.staffList.filter(s => s.store === currentStore);
+        container.innerHTML = filtered.map(s => `
+            <div class="option">
+                <input type="checkbox" id="chk-${s.name}" value="${s.name}" onchange="updateStaffSelection()">
+                <label for="chk-${s.name}">${s.name}</label>
             </div>
         `).join('');
     }
 
-    function handleSelectionChange() {
-        const checkboxes = document.querySelectorAll('.staff-option input:checked');
-        selectedStaffs = Array.from(checkboxes).map(cb => cb.value);
-        document.getElementById('selected-staff-label').innerText = 
-            selectedStaffs.length > 0 ? selectedStaffs.join(', ') : '選択してください';
-        renderChart();
+    function updateStaffSelection() {
+        const chks = document.querySelectorAll('#staff-dropdown input:checked');
+        selectedStaffs = Array.from(chks).map(c => c.value);
+        document.getElementById('staff-label').innerText = selectedStaffs.length > 0 ? selectedStaffs.join(', ') : '比較するスタッフを選択';
+        updateChart();
     }
 
-    function renderChart() {
+    function updateChart() {
         const ctx = document.getElementById('salesChart').getContext('2d');
-        const labels = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
-        
         if (myChart) myChart.destroy();
 
-        const datasets = selectedStaffs.map((name, index) => ({
-            label: name,
-            data: allData.chartData[name],
-            borderColor: index === 0 ? '#d4af37' : `hsl(${index * 40}, 70%, 60%)`, // 2人目以降は色を変える
-            backgroundColor: 'transparent',
-            borderWidth: 3,
-            pointRadius: 6,
-            pointHitRadius: 25, // ★タップの反応範囲を大幅拡大
-            tension: 0.3
-        }));
+        const datasets = [];
+        
+        // 店舗合計のラインを追加
+        if (currentStore) {
+            datasets.push({
+                label: `店舗: ${currentStore}`,
+                data: allData.chartData[currentStore],
+                borderColor: CHART_COLORS[0],
+                borderWidth: 4,
+                fill: false,
+                tension: 0.3,
+                pointHitRadius: 25
+            });
+        }
+
+        // 選択されたスタッフのラインを追加
+        selectedStaffs.forEach((name, i) => {
+            datasets.push({
+                label: name,
+                data: allData.chartData[name],
+                borderColor: CHART_COLORS[(i + 1) % CHART_COLORS.length],
+                borderWidth: 2,
+                fill: false,
+                tension: 0.3,
+                pointHitRadius: 25
+            });
+        });
 
         myChart = new Chart(ctx, {
             type: 'line',
-            data: { labels, datasets },
+            data: {
+                labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
+                datasets: datasets
+            },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false, // ★点の真上じゃなくても反応させる
-                },
+                interaction: { mode: 'index', intersect: false },
                 scales: {
-                    y: { beginAtZero: true, grid: { color: '#333' } },
-                    x: { grid: { display: false } }
+                    y: { beginAtZero: true, grid: { color: '#333' }, ticks: { color: '#aaa' } },
+                    x: { grid: { display: false }, ticks: { color: '#aaa' } }
                 },
-                plugins: {
-                    legend: { labels: { color: '#fff' } }
-                }
+                plugins: { legend: { position: 'bottom', labels: { color: '#fff', boxWidth: 12 } } }
             }
         });
     }
 
-    window.onload = fetchData;
+    init();
 </script>
 </body>
 </html>
