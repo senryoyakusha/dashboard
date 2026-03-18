@@ -2,16 +2,19 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Management Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Premium Management Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
             --bg-dark: #121212;
             --card-bg: #1e1e1e;
             --gold: #d4af37;
+            --gold-light: #f1d592;
             --text-gray: #a0a0a0;
+            --error-red: #ff5a5f;
         }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-dark);
@@ -21,7 +24,10 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
+
+        /* ヘッダー */
         header {
             width: 100%;
             padding: 20px 0;
@@ -31,18 +37,25 @@
             position: sticky;
             top: 0;
             z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
+
         .header-title {
             font-size: 1.1rem;
             font-weight: bold;
             letter-spacing: 3px;
             color: var(--gold);
         }
+
+        /* メインコンテナ */
         .container {
             width: 90%;
             max-width: 450px;
-            margin-top: 40px;
+            margin-top: 30px;
+            flex-grow: 1;
         }
+
+        /* 数値表示カード */
         .metric-card {
             background: var(--card-bg);
             border-radius: 20px;
@@ -50,29 +63,69 @@
             text-align: center;
             border: 1px solid rgba(212, 175, 55, 0.2);
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: transform 0.2s;
         }
+
+        .metric-card:active {
+            transform: scale(0.98);
+        }
+
         .label {
             font-size: 0.8rem;
             color: var(--text-gray);
-            letter-spacing: 1px;
+            letter-spacing: 2px;
             margin-bottom: 15px;
+            text-transform: uppercase;
         }
+
         .value {
             font-size: 4rem;
             font-weight: bold;
             color: var(--gold);
-            margin-bottom: 10px;
+            margin-bottom: 5px;
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
         }
-        .status-bar {
-            font-size: 0.7rem;
-            color: var(--text-gray);
-            margin-top: 20px;
+
+        .unit {
+            font-size: 1rem;
+            color: var(--gold-light);
+            margin-left: 5px;
         }
-        #loading {
-            margin-top: 100px;
+
+        /* ステータス情報 */
+        .info-area {
+            margin-top: 25px;
             text-align: center;
-            color: var(--gold);
         }
+
+        .status-text {
+            font-size: 0.75rem;
+            color: var(--text-gray);
+            line-height: 1.6;
+        }
+
+        /* ローディングアニメーション */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            color: var(--gold);
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        /* 更新ボタン */
         .refresh-btn {
             position: fixed;
             bottom: 30px;
@@ -84,64 +137,113 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.6);
             cursor: pointer;
+            z-index: 500;
+        }
+
+        .refresh-btn i {
+            color: #000;
+            font-size: 1.4rem;
+        }
+
+        /* エラー表示 */
+        .error-message {
+            color: var(--error-red);
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+            border: 1px dashed var(--error-red);
+            border-radius: 10px;
         }
     </style>
 </head>
 <body>
 
+<div id="loading-overlay">
+    <div class="spinner"><i class="fas fa-circle-notch fa-spin"></i></div>
+    <div style="color: var(--gold); letter-spacing: 2px; font-size: 0.8rem;">AUTHENTICATING...</div>
+</div>
+
 <header>
-    <div class="header-title">DASHBOARD</div>
+    <div class="header-title">SENRYO YAKUSHA</div>
 </header>
 
 <div class="container">
-    <div id="loading">
-        <i class="fas fa-spinner fa-spin fa-2x"></i>
-        <p>Loading Data...</p>
-    </div>
-
     <div id="dashboard-content" style="display: none;">
         <div class="metric-card">
-            <div class="label">CURRENT VALUE (C67)</div>
+            <div class="label" id="metric-label">CURRENT METRIC (C67)</div>
             <div class="value" id="c67-value">0</div>
-            <div class="status-bar" id="last-update">---</div>
+            <div class="info-area">
+                <div class="status-text" id="last-update">---</div>
+                <div class="status-text" id="user-info" style="margin-top: 5px; opacity: 0.6;"></div>
+            </div>
         </div>
     </div>
+    <div id="error-display" style="display: none;" class="error-message"></div>
 </div>
 
-<div class="refresh-btn" onclick="fetchData()">
-    <i class="fas fa-sync-alt" style="color: #000; font-size: 1.4rem;"></i>
+<div class="refresh-btn" onclick="fetchDashboardData()">
+    <i class="fas fa-sync-alt"></i>
 </div>
 
 <script>
+    // デプロイしたGASのURL
     const GAS_URL = "https://script.google.com/a/macros/senryoyakusha.com/s/AKfycbxAzSojBu5Tjzjge2akg4d_VKGdl6ZCYoEjaRRKiZaRI5DXfFEdkH8MKwW2eI2UgCc/exec";
 
-    async function fetchData() {
-        const loadingEl = document.getElementById('loading');
-        const contentEl = document.getElementById('dashboard-content');
+    /**
+     * データ取得メイン処理
+     */
+    async function fetchDashboardData() {
+        const loading = document.getElementById('loading-overlay');
+        const content = document.getElementById('dashboard-content');
+        const errorDiv = document.getElementById('error-display');
         
-        loadingEl.style.display = 'block';
-        contentEl.style.display = 'none';
+        loading.style.display = 'flex';
+        content.style.display = 'none';
+        errorDiv.style.display = 'none';
+
+        // シフトアプリのローカルストレージからユーザーIDを取得 [cite: 63, 75]
+        // テスト時はブラウザのコンソールで localStorage.setItem('shift_app_user_id', '自分のID') を実行してください
+        const userId = localStorage.getItem('shift_app_user_id');
+
+        if (!userId) {
+            showError("ログイン情報が見つかりません。シフトアプリから再度開いてください。");
+            return;
+        }
 
         try {
-            const response = await fetch(GAS_URL);
+            // セキュリティのためIDをパラメータに付与してリクエスト [cite: 169]
+            const response = await fetch(`${GAS_URL}?userId=${userId}`);
             const data = await response.json();
 
             if (data.status === 'success') {
+                // 画面に値を反映
                 document.getElementById('c67-value').innerText = data.metrics.target_cell_c67;
-                document.getElementById('last-update').innerText = "Last Updated: " + data.updatedAt;
+                document.getElementById('last-update').innerText = "DATA UPDATED: " + data.updatedAt;
+                document.getElementById('user-info').innerText = "Logged in as ID: " + userId;
                 
-                loadingEl.style.display = 'none';
-                contentEl.style.display = 'block';
+                loading.style.display = 'none';
+                content.style.display = 'block';
+            } else {
+                showError(data.message || "アクセスが拒否されました");
             }
         } catch (error) {
-            console.error("Fetch error:", error);
-            loadingEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i><p>Connection Error</p>';
+            console.error("Fetch Error:", error);
+            showError("通信エラーが発生しました。電波の良い場所で再試行してください。");
         }
     }
 
-    window.onload = fetchData;
+    function showError(msg) {
+        const loading = document.getElementById('loading-overlay');
+        const errorDiv = document.getElementById('error-display');
+        loading.style.display = 'none';
+        errorDiv.innerText = msg;
+        errorDiv.style.display = 'block';
+    }
+
+    // ページ読み込み時に自動実行
+    window.onload = fetchDashboardData;
 </script>
 
 </body>
