@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Professional Dashboard 2026</title>
+    <title>Management Dashboard 2026</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -12,34 +12,33 @@
         header { padding: 15px; background: var(--card); border-bottom: 1px solid #333; text-align: center; color: var(--gold); font-weight: bold; letter-spacing: 2px; }
         .container { width: 94%; max-width: 500px; margin: 10px auto; }
         
-        /* 指標ボタン */
         .metric-selector { display: flex; overflow-x: auto; gap: 8px; padding: 10px 0; scrollbar-width: none; }
-        .metric-selector::-webkit-scrollbar { display: none; }
-        .metric-btn { white-space: nowrap; padding: 10px 18px; border-radius: 10px; background: var(--gray); border: 1px solid #444; color: #aaa; font-size: 0.8rem; cursor: pointer; transition: 0.3s; }
-        .metric-btn.active { background: var(--gold); color: #000; border-color: var(--gold); font-weight: bold; transform: scale(1.05); }
+        .metric-btn { white-space: nowrap; padding: 10px 18px; border-radius: 10px; background: var(--gray); border: 1px solid #444; color: #aaa; font-size: 0.8rem; cursor: pointer; }
+        .metric-btn.active { background: var(--gold); color: #000; font-weight: bold; }
 
-        /* セレクター */
         .select-box { background: var(--card); border: 1px solid #444; padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 0.85rem; margin-bottom: 10px; }
-        .dropdown { display: none; background: var(--card); border: 1px solid #444; border-radius: 10px; padding: 5px; max-height: 350px; overflow-y: auto; position: absolute; width: 90%; max-width: 470px; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        .store-header { background: rgba(212, 175, 55, 0.1); padding: 10px; color: var(--gold); font-weight: bold; font-size: 0.8rem; display: flex; align-items: center; gap: 10px; }
-        .staff-option { padding: 12px 10px 12px 40px; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
+        .dropdown { display: none; background: var(--card); border: 1px solid #444; border-radius: 10px; padding: 5px; max-height: 350px; overflow-y: auto; position: absolute; width: 90%; max-width: 470px; z-index: 1000; }
+        
+        .chart-card { background: var(--card); border-radius: 15px; padding: 10px; border: 1px solid rgba(212, 175, 55, 0.2); height: 320px; margin-top: 10px; }
 
-        /* グラフ */
-        .chart-card { background: var(--card); border-radius: 15px; padding: 10px; border: 1px solid rgba(212, 175, 55, 0.2); height: 350px; margin-top: 10px; }
-
-        /* ★ 今月の数値カードエリア ★ */
+        /* カードデザイン */
         .stats-container { margin-top: 25px; }
-        .stats-title { font-size: 0.8rem; color: var(--gold); margin-bottom: 10px; font-weight: bold; letter-spacing: 1px; }
+        .stats-title { font-size: 0.8rem; color: var(--gold); margin-bottom: 12px; font-weight: bold; letter-spacing: 1px; }
         .stat-card { 
-            background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 8px;
-            display: flex; justify-content: space-between; align-items: center;
-            border-left: 4px solid var(--gold); box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 10px;
+            border-left: 4px solid var(--gold); box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
-        .stat-name { font-size: 0.9rem; font-weight: bold; }
-        .stat-value { font-size: 1.1rem; color: var(--gold); font-weight: bold; font-family: 'Courier New', Courier, monospace; }
+        .stat-row { display: flex; justify-content: space-between; align-items: flex-end; }
+        .stat-name { font-size: 0.95rem; font-weight: bold; margin-bottom: 8px; display: block; }
+        
+        /* 予測・実績の並列表示用 */
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; border-top: 1px solid #333; pt: 10px; margin-top: 5px; padding-top: 10px;}
+        .data-item { display: flex; flex-direction: column; }
+        .data-label { font-size: 0.65rem; color: #aaa; margin-bottom: 2px; }
+        .data-value { font-size: 1.1rem; color: var(--gold); font-weight: bold; }
+        .data-value.sub { color: #eee; font-size: 1rem; }
 
         #loading { text-align: center; margin-top: 80px; color: var(--gold); }
-        input[type="checkbox"] { transform: scale(1.2); accent-color: var(--gold); }
     </style>
 </head>
 <body>
@@ -59,16 +58,14 @@
     </div>
 
     <div class="select-box" onclick="toggleDropdown()">
-        <span id="filter-label">読み込み中...</span><i class="fas fa-users"></i>
+        <span id="filter-label">スタッフを選択</span><i class="fas fa-users"></i>
     </div>
     <div id="filter-dropdown" class="dropdown"></div>
 
-    <div class="chart-card">
-        <canvas id="salesChart"></canvas>
-    </div>
+    <div class="chart-card"><canvas id="salesChart"></canvas></div>
 
     <div class="stats-container">
-        <div class="stats-title" id="stats-month-title">今月の着地</div>
+        <div class="stats-title" id="stats-title">実績データ</div>
         <div id="stat-cards-list"></div>
     </div>
 </div>
@@ -81,7 +78,8 @@
     let allData = null, myChart = null, selectedKeys = [], currentMetric = 'sales';
     const formats = {
         sales: { u: '￥', s: '', d: 0 }, shimeiSales: { u: '￥', s: '', d: 0 }, timePrice: { u: '￥', s: '', d: 0 },
-        shimeiCount: { u: '', s: '名', d: 0 }, nextReserve: { u: '', s: '％', d: 2 }, newRepeat: { u: '', s: '％', d: 2 }
+        shimeiCount: { u: '', s: '名', d: 0 }, nextReserve: { u: '', s: '％', d: 2 }, newRepeat: { u: '', s: '％', d: 2 },
+        forecast: { u: '￥', s: '', d: 0 }
     };
 
     async function init() {
@@ -110,24 +108,21 @@
         const sortedStores = [...allData.storeList].sort((a, b) => (a === myStore ? -1 : b === myStore ? 1 : 0));
         let html = "";
         sortedStores.forEach(store => {
-            html += `<div class="store-header"><input type="checkbox" onchange="toggleStore('${store}', this)"><label>${store}</label></div>`;
+            html += `<div style="padding:10px; color:var(--gold); font-weight:bold; font-size:0.8rem; background:rgba(212,175,55,0.1)">${store}</div>`;
             allData.staffList.filter(s => s.store === store).forEach(s => {
-                html += `<div class="staff-option"><input type="checkbox" class="staff-chk" data-store="${store}" value="${s.name}" ${selectedKeys.includes(s.name) ? 'checked' : ''} onchange="handleStaffChange()"><label>${s.name}</label></div>`;
+                html += `<div style="padding:12px 10px 12px 30px; border-bottom:1px solid #333; display:flex; align-items:center; gap:10px;">
+                    <input type="checkbox" class="staff-chk" value="${s.name}" ${selectedKeys.includes(s.name) ? 'checked' : ''} onchange="handleStaffChange()">
+                    <label style="font-size:0.85rem;">${s.name}</label>
+                </div>`;
             });
         });
         container.innerHTML = html;
         updateLabel();
     }
 
-    function toggleStore(store, el) {
-        document.querySelectorAll(`.staff-chk[data-store="${store}"]`).forEach(c => c.checked = el.checked);
-        handleStaffChange();
-    }
-
     function handleStaffChange() {
         selectedKeys = Array.from(document.querySelectorAll('.staff-chk:checked')).map(c => c.value);
-        updateLabel();
-        updateDisplay();
+        updateLabel(); updateDisplay();
     }
 
     function updateLabel() { document.getElementById('filter-label').innerText = selectedKeys.length + "名を選択中"; }
@@ -139,13 +134,8 @@
         updateDisplay();
     }
 
-    function formatVal(val) {
-        const f = formats[currentMetric];
-        return f.u + Number(val).toFixed(f.d).toLocaleString() + f.suffix; // formatsのミス修正用
-    }
-    // formatValの修正版
-    function getFormatted(val) {
-        const f = formats[currentMetric];
+    function getFormatted(val, metric = currentMetric) {
+        const f = formats[metric];
         return f.u + Number(val).toLocaleString(undefined, {minimumFractionDigits: f.d, maximumFractionDigits: f.d}) + (f.s || '');
     }
 
@@ -156,26 +146,49 @@
 
     function updateCards() {
         const listContainer = document.getElementById('stat-cards-list');
-        const currentYear = allData.yearList[0]; // 最新年
-        
-        // 現在の月（データがある最後の月を探す）
-        // 実際には1月〜12月の配列なので、値が0じゃない最後の月を「今月」とする簡易ロジック
-        const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-        let latestMonthIdx = new Date().getMonth(); // デフォルトは今の月
+        const titleContainer = document.getElementById('stats-title');
+        const currentYear = allData.yearList[0];
+        const monthIdx = new Date().getMonth();
+        const monthName = (monthIdx + 1) + '月';
 
-        document.getElementById('stats-month-title').innerText = `${currentYear}年 ${monthNames[latestMonthIdx]} の実績`;
+        // タイトルの切り替え
+        titleContainer.innerText = (currentMetric === 'sales') ? `${monthName} 売上予測 vs 実績` : `${monthName} 実績データ`;
 
         let html = "";
         selectedKeys.forEach((name, i) => {
-            const val = allData.chartData[currentYear][name][currentMetric][latestMonthIdx];
-            html += `
-                <div class="stat-card" style="border-left-color: ${COLORS[i % COLORS.length]}">
-                    <span class="stat-name">${name}</span>
-                    <span class="stat-value">${getFormatted(val)}</span>
-                </div>
-            `;
+            const val = allData.chartData[currentYear][name][currentMetric][monthIdx];
+            const forecast = allData.chartData[currentYear][name]['forecast'][monthIdx];
+
+            if (currentMetric === 'sales') {
+                // 総売上の時のリッチレイアウト
+                html += `
+                    <div class="stat-card" style="border-left-color: ${COLORS[i % COLORS.length]}">
+                        <span class="stat-name">${name}</span>
+                        <div class="comparison-grid">
+                            <div class="data-item">
+                                <span class="data-label">売上予測</span>
+                                <span class="data-value sub">${getFormatted(forecast, 'forecast')}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">現在実績</span>
+                                <span class="data-value">${getFormatted(val)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // 通常レイアウト
+                html += `
+                    <div class="stat-card" style="border-left-color: ${COLORS[i % COLORS.length]}">
+                        <div class="stat-row">
+                            <span class="stat-name">${name}</span>
+                            <span class="data-value">${getFormatted(val)}</span>
+                        </div>
+                    </div>
+                `;
+            }
         });
-        listContainer.innerHTML = html || '<p style="text-align:center; font-size:0.8rem; color:#666;">スタッフを選択してください</p>';
+        listContainer.innerHTML = html || '<p style="text-align:center;color:#666;">スタッフ未選択</p>';
     }
 
     function updateChart() {
@@ -183,10 +196,8 @@
         if (myChart) myChart.destroy();
         const year = allData.yearList[0];
         const datasets = selectedKeys.map((name, i) => ({
-            label: name,
-            data: allData.chartData[year][name][currentMetric],
-            borderColor: COLORS[i % COLORS.length],
-            borderWidth: 2.5, pointRadius: 4, pointHitRadius: 30, tension: 0.3, fill: false
+            label: name, data: allData.chartData[year][name][currentMetric],
+            borderColor: COLORS[i % COLORS.length], borderWidth: 2.5, pointRadius: 4, tension: 0.3, fill: false
         }));
         myChart = new Chart(ctx, {
             type: 'line',
@@ -197,14 +208,10 @@
                     y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => getFormatted(v), color: '#aaa', font: { size: 9 } } },
                     x: { ticks: { color: '#aaa', font: { size: 10 } } }
                 },
-                plugins: { 
-                    legend: { display: false },
-                    tooltip: { callbacks: { label: c => c.dataset.label + ': ' + getFormatted(c.parsed.y) } }
-                }
+                plugins: { legend: { display: false } }
             }
         });
     }
-
     init();
 </script>
 </body>
