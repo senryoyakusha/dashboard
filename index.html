@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Advanced Dashboard 2026</title>
+    <title>Professional Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -11,15 +11,22 @@
         body { font-family: sans-serif; background: var(--bg); color: var(--white); margin: 0; padding-bottom: 30px; }
         header { padding: 15px; background: var(--card); border-bottom: 1px solid #333; text-align: center; color: var(--gold); font-weight: bold; letter-spacing: 2px; }
         .container { width: 94%; max-width: 500px; margin: 10px auto; }
-        .metric-selector { display: flex; overflow-x: auto; gap: 8px; padding: 10px 0; scrollbar-width: none; }
-        .metric-selector::-webkit-scrollbar { display: none; }
+        
+        /* 年度選択 */
+        .year-selector { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; }
+        .year-btn { padding: 6px 15px; border-radius: 20px; background: #2a2a2a; border: 1px solid #444; color: #aaa; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+        .year-btn.active { background: #444; color: var(--gold); border-color: var(--gold); }
+
+        .metric-selector { display: flex; overflow-x: auto; gap: 8px; padding: 5px 0 15px 0; scrollbar-width: none; }
         .metric-btn { white-space: nowrap; padding: 8px 15px; border-radius: 8px; background: #2a2a2a; border: 1px solid #444; color: #aaa; font-size: 0.75rem; cursor: pointer; }
-        .metric-btn.active { background: var(--gold); color: #000; border-color: var(--gold); font-weight: bold; }
-        .select-box { background: var(--card); border: 1px solid #444; padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 10px; font-size: 0.85rem; }
+        .metric-btn.active { background: var(--gold); color: #000; font-weight: bold; }
+        
+        .select-box { background: var(--card); border: 1px solid #444; padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 0.85rem; }
         .dropdown { display: none; background: var(--card); border: 1px solid #444; border-radius: 10px; padding: 5px; max-height: 350px; overflow-y: auto; position: absolute; width: 90%; max-width: 470px; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         .store-header { background: rgba(212, 175, 55, 0.1); padding: 10px; color: var(--gold); font-weight: bold; font-size: 0.8rem; display: flex; align-items: center; gap: 10px; }
         .staff-option { padding: 10px 10px 10px 40px; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
-        .chart-card { background: var(--card); border-radius: 15px; padding: 10px; border: 1px solid rgba(212, 175, 55, 0.2); height: 380px; margin-top: 10px; }
+        
+        .chart-card { background: var(--card); border-radius: 15px; padding: 10px; border: 1px solid rgba(212, 175, 55, 0.2); height: 400px; margin-top: 10px; }
         #loading { text-align: center; margin-top: 80px; color: var(--gold); }
         input[type="checkbox"] { transform: scale(1.2); accent-color: var(--gold); }
     </style>
@@ -31,12 +38,13 @@
 <div id="loading"><i class="fas fa-circle-notch fa-spin fa-2x"></i></div>
 
 <div class="container" id="main-content" style="display: none;">
+    <div class="year-selector" id="year-selector"></div>
+
     <div class="metric-selector" id="metric-selector">
         <button class="metric-btn active" onclick="changeMetric('sales', this)">総売上</button>
         <button class="metric-btn" onclick="changeMetric('shimeiSales', this)">指名売上</button>
         <button class="metric-btn" onclick="changeMetric('timePrice', this)">時間単価</button>
         <button class="metric-btn" onclick="changeMetric('shimeiCount', this)">指名客数</button>
-        <button class="metric-btn" onclick="changeMetric('newCount', this)">新規客数</button>
         <button class="metric-btn" onclick="changeMetric('nextReserve', this)">次回予約率</button>
         <button class="metric-btn" onclick="changeMetric('newRepeat', this)">新規再来率</button>
     </div>
@@ -55,22 +63,29 @@
     const GAS_URL = "https://script.google.com/a/macros/senryoyakusha.com/s/AKfycbxAzSojBu5Tjzjge2akg4d_VKGdl6ZCYoEjaRRKiZaRI5DXfFEdkH8MKwW2eI2UgCc/exec";
     const currentUserId = "user_gps3atgzq"; 
 
-    const COLORS = ['#d4af37','#3498db','#e74c3c','#2ecc71','#9b59b6','#f1c40f','#1abc9c','#e67e22','#ecf0f1','#ff69b4'];
+    // ベースカラー（スタッフごとの色）
+    const BASE_COLORS = [
+        'rgba(212, 175, 55',  // Gold
+        'rgba(52, 152, 219',  // Blue
+        'rgba(231, 76, 60',   // Red
+        'rgba(46, 204, 113',  // Green
+        'rgba(155, 89, 182',  // Purple
+        'rgba(241, 196, 15',  // Yellow
+        'rgba(26, 188, 156',  // Teal
+        'rgba(230, 126, 34',  // Orange
+        'rgba(236, 240, 241', // Silver
+        'rgba(255, 105, 180'  // Pink
+    ];
 
     let allData = null;
     let myChart = null;
     let selectedKeys = []; 
+    let selectedYears = [];
     let currentMetric = 'sales';
 
-    // 指標ごとのフォーマットルール
     const formats = {
-        sales: { unit: '￥', suffix: '', decimal: 0 },
-        shimeiSales: { unit: '￥', suffix: '', decimal: 0 },
-        timePrice: { unit: '￥', suffix: '', decimal: 0 },
-        shimeiCount: { unit: '', suffix: '名', decimal: 0 },
-        newCount: { unit: '', suffix: '名', decimal: 0 },
-        nextReserve: { unit: '', suffix: '％', decimal: 2 },
-        newRepeat: { unit: '', suffix: '％', decimal: 2 }
+        sales: { u: '￥', s: '', d: 0 }, shimeiSales: { u: '￥', s: '', d: 0 }, timePrice: { u: '￥', s: '', d: 0 },
+        shimeiCount: { u: '', s: '名', d: 0 }, nextReserve: { u: '', s: '％', d: 2 }, newRepeat: { u: '', s: '％', d: 2 }
     };
 
     async function init() {
@@ -78,15 +93,36 @@
             const res = await fetch(`${GAS_URL}?userId=${currentUserId}`);
             allData = await res.json();
             if (allData.status === 'success') {
+                selectedYears = [allData.yearList[0]]; // 最新年度をデフォルト
                 const myName = allData.myInfo.userName;
                 const myStore = allData.staffList.find(s => s.name === myName)?.store;
                 selectedKeys = allData.staffList.filter(s => s.store === myStore).map(s => s.name);
+                
+                renderYearSelector();
                 renderDropdown(myStore);
                 updateChart();
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
             }
         } catch (e) { console.error(e); }
+    }
+
+    function renderYearSelector() {
+        const container = document.getElementById('year-selector');
+        container.innerHTML = allData.yearList.map(y => `
+            <button class="year-btn ${selectedYears.includes(y) ? 'active' : ''}" onclick="toggleYear('${y}', this)">${y}年</button>
+        `).join('');
+    }
+
+    function toggleYear(year, btn) {
+        if (selectedYears.includes(year)) {
+            if (selectedYears.length > 1) selectedYears = selectedYears.filter(y => y !== year);
+        } else {
+            selectedYears.push(year);
+        }
+        selectedYears.sort().reverse();
+        renderYearSelector();
+        updateChart();
     }
 
     function toggleDropdown() {
@@ -133,53 +169,52 @@
 
     function formatVal(val) {
         const f = formats[currentMetric];
-        // ％表記の場合は値を100倍して表示（スプシが0.85なら85.00とする場合）
-        // スプシですでに整数（85）ならそのままでOK。今回はスプシの値をそのまま整形。
-        let displayVal = val.toFixed(f.decimal);
-        return f.unit + displayVal.toLocaleString() + f.suffix;
+        return f.u + val.toFixed(f.d).toLocaleString() + f.s;
     }
 
     function updateChart() {
         const ctx = document.getElementById('salesChart').getContext('2d');
         if (myChart) myChart.destroy();
 
-        const datasets = selectedKeys.map((name, i) => ({
-            label: name,
-            data: allData.chartData[name][currentMetric],
-            borderColor: COLORS[i % COLORS.length],
-            borderWidth: 2,
-            pointRadius: 4,
-            pointHitRadius: 30,
-            tension: 0.3,
-            fill: false
-        }));
+        const datasets = [];
+        selectedKeys.forEach((name, i) => {
+            const baseColor = BASE_COLORS[i % BASE_COLORS.length];
+            
+            selectedYears.forEach((year, yIdx) => {
+                // 年度に応じて透明度を変える（新しいほど濃い）
+                // 最新年度(0番目)は opacity 1.0, 過去になるほど下げる
+                const opacity = 1.0 - (yIdx * 0.4); 
+                const colorString = `${baseColor}, ${Math.max(opacity, 0.2)})`;
+
+                const data = allData.chartData[year] && allData.chartData[year][name] 
+                             ? allData.chartData[year][name][currentMetric] 
+                             : new Array(12).fill(0);
+
+                datasets.push({
+                    label: `${name} (${year})`,
+                    data: data,
+                    borderColor: colorString,
+                    backgroundColor: colorString,
+                    borderWidth: yIdx === 0 ? 3 : 1.5, // 最新年は太く
+                    pointRadius: yIdx === 0 ? 4 : 2,
+                    tension: 0.3,
+                    fill: false
+                });
+            });
+        });
 
         myChart = new Chart(ctx, {
             type: 'line',
             data: { labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets },
             options: {
                 responsive: true, maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false },
                 scales: { 
-                    y: { 
-                        beginAtZero: true, 
-                        grid: { color: 'rgba(255,255,255,0.05)' }, 
-                        ticks: { 
-                            color: '#aaa', font: { size: 9 },
-                            callback: function(value) { return formatVal(value); } // Y軸の目盛り
-                        } 
-                    },
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => formatVal(v), color: '#aaa', font: { size: 9 } } },
                     x: { ticks: { color: '#aaa', font: { size: 10 } } }
                 },
                 plugins: { 
-                    legend: { position: 'bottom', labels: { color: '#fff', boxWidth: 8, font: { size: 9 } } },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': ' + formatVal(context.parsed.y);
-                            }
-                        }
-                    }
+                    legend: { position: 'bottom', labels: { color: '#fff', boxWidth: 8, font: { size: 8 } } },
+                    tooltip: { callbacks: { label: c => c.dataset.label + ': ' + formatVal(c.parsed.y) } }
                 }
             }
         });
