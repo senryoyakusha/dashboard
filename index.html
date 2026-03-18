@@ -239,37 +239,62 @@
     }
 
     function updateChart() {
-        const ctx = document.getElementById('salesChart').getContext('2d');
-        if (myChart) myChart.destroy();
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    if (myChart) myChart.destroy();
 
-        const datasets = [];
-        selectedKeys.forEach((name, i) => {
-            const baseColor = BASE_COLORS[i % BASE_COLORS.length];
-            selectedYears.forEach((year, yIdx) => {
-                const opacity = 1.0 - (yIdx * 0.4);
-                const color = `${baseColor}, ${Math.max(opacity, 0.2)})`;
-                const data = allData.chartData[year]?.[name]?.[currentMetric] || new Array(12).fill(0);
-                datasets.push({
-                    label: `${name} (${year})`, data: data,
-                    borderColor: color, backgroundColor: color,
-                    borderWidth: yIdx === 0 ? 3 : 1.5, pointRadius: yIdx === 0 ? 4 : 2, tension: 0.3, fill: false
-                });
+    const datasets = [];
+    selectedKeys.forEach((name, i) => {
+        const baseColor = BASE_COLORS[i % BASE_COLORS.length];
+        selectedYears.forEach((year, yIdx) => {
+            const opacity = 1.0 - (yIdx * 0.4);
+            const color = `${baseColor}, ${Math.max(opacity, 0.2)})`;
+            const data = allData.chartData[year]?.[name]?.[currentMetric] || new Array(12).fill(0);
+            
+            datasets.push({
+                label: `${name} (${year})`,
+                data: data,
+                borderColor: color,
+                backgroundColor: color,
+                borderWidth: yIdx === 0 ? 3 : 1.5,
+                pointRadius: yIdx === 0 ? 4 : 2,
+                // --- タップ感の改善点1: 点の反応範囲を拡大 ---
+                pointHitRadius: 30, 
+                tension: 0.3,
+                fill: false
             });
         });
+    });
 
-        myChart = new Chart(ctx, {
-            type: 'line',
-            data: { labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                scales: { 
-                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => getFormatted(v), color: '#aaa', font: { size: 9 } } },
-                    x: { ticks: { color: '#aaa', font: { size: 10 } } }
+    myChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            // --- タップ感の改善点2: 垂直線上のどこを触っても反応させる ---
+            interaction: {
+                mode: 'index',
+                intersect: false, 
+            },
+            scales: { 
+                y: { 
+                    grid: { color: 'rgba(255,255,255,0.05)' }, 
+                    ticks: { callback: v => getFormatted(v), color: '#aaa', font: { size: 9 } } 
                 },
-                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.dataset.label + ': ' + getFormatted(c.parsed.y) } } }
+                x: { 
+                    ticks: { color: '#aaa', font: { size: 10 } } 
+                }
+            },
+            plugins: { 
+                legend: { display: false }, 
+                tooltip: { 
+                    enabled: true,
+                    callbacks: { label: c => c.dataset.label + ': ' + getFormatted(c.parsed.y) } 
+                } 
             }
-        });
-    }
+        }
+    });
+}
     init();
 </script>
 </body>
