@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Management DashBoard 2026</title>
+    <title>Management Dashboard 2026</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
@@ -12,38 +12,12 @@
     <style>
         :root { --bg: #121212; --card: #1e1e1e; --gold: #d4af37; --white: #ffffff; --gray: #2a2a2a; }
         body { font-family: sans-serif; background: var(--bg); color: var(--white); margin: 0; overflow: hidden; }
-        
-        /* ヘッダー調整：ロゴスペース確保 */
-        header { 
-            height: 60px;
-            background: var(--card); 
-            border-bottom: 1px solid #333; 
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            padding: 0 15px;
-        }
-        .header-logo {
-            position: absolute;
-            left: 15px;
-            width: 100px; /* 指定の100px */
-            height: 40px;
-            object-fit: contain;
-        }
-        .header-title {
-            color: var(--gold); 
-            font-weight: bold; 
-            letter-spacing: 1px;
-            font-size: 1rem;
-            text-transform: uppercase;
-        }
-
+        header { height: 60px; background: var(--card); border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: center; position: relative; padding: 0 15px; }
+        .header-logo { position: absolute; left: 15px; width: 100px; height: 40px; object-fit: contain; }
+        .header-title { color: var(--gold); font-weight: bold; letter-spacing: 1px; font-size: 0.9rem; text-transform: uppercase; }
         .container { width: 94%; max-width: 500px; margin: 10px auto; padding-bottom: 80px; }
         .swiper { width: 100%; height: 100vh; }
         .swiper-slide { height: 100%; overflow-y: auto; }
-        
-        /* 共通パーツ */
         .year-selector { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; }
         .year-btn { padding: 6px 15px; border-radius: 20px; background: var(--gray); border: 1px solid #444; color: #aaa; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
         .year-btn.active { background: #444; color: var(--gold); border-color: var(--gold); }
@@ -72,11 +46,8 @@
 
 <div class="swiper">
     <div class="swiper-wrapper">
-        <div class="swiper-slide">
-            <header>
-                <img src="logo.png" class="header-logo" alt="LOGO">
-                <div class="header-title">Staff DashBoards</div>
-            </header>
+        <div class="swiper-slide" id="slide-1">
+            <header><img src="logo.png" class="header-logo"><div class="header-title">Staff DashBoards</div></header>
             <div class="container">
                 <div class="year-selector" id="year-1"></div>
                 <div class="metric-selector">
@@ -94,11 +65,8 @@
             </div>
         </div>
 
-        <div class="swiper-slide">
-            <header>
-                <img src="logo.png" class="header-logo" alt="LOGO">
-                <div class="header-title">Material DashBoards</div>
-            </header>
+        <div class="swiper-slide" id="slide-2">
+            <header><img src="logo.png" class="header-logo"><div class="header-title">Material DashBoards</div></header>
             <div class="container">
                 <div class="year-selector" id="year-2"></div>
                 <div class="metric-selector">
@@ -112,15 +80,12 @@
                 <div class="select-box" onclick="toggleD('drop-2')"><span id="label-2">店舗を選択</span><i class="fas fa-store"></i></div>
                 <div id="drop-2" class="dropdown"></div>
                 <div class="chart-card"><canvas id="chart-2"></canvas></div>
-                <div class="stats-container"><div class="stats-title">材料費実績</div><div id="cards-2"></div></div>
+                <div class="stats-container"><div id="cards-2"></div></div>
             </div>
         </div>
 
-        <div class="swiper-slide">
-            <header>
-                <img src="logo.png" class="header-logo" alt="LOGO">
-                <div class="header-title">Core members DashBoards</div>
-            </header>
+        <div class="swiper-slide" id="slide-3">
+            <header><img src="logo.png" class="header-logo"><div class="header-title">Core members DashBoards</div></header>
             <div class="container">
                 <div class="year-selector" id="year-3"></div>
                 <div class="metric-selector">
@@ -139,15 +104,12 @@
                 <div class="select-box" onclick="toggleD('drop-3')"><span id="label-3">店舗を選択</span><i class="fas fa-chart-line"></i></div>
                 <div id="drop-3" class="dropdown"></div>
                 <div class="chart-card"><canvas id="chart-3"></canvas></div>
-                <div class="stats-container"><div class="stats-title" id="title-3">実績</div><div id="cards-3"></div></div>
+                <div class="stats-container"><div id="cards-3"></div></div>
             </div>
         </div>
 
-        <div class="swiper-slide">
-            <header>
-                <img src="logo.png" class="header-logo" alt="LOGO">
-                <div class="header-title">Representative DashBoards</div>
-            </header>
+        <div class="swiper-slide" id="slide-4">
+            <header><img src="logo.png" class="header-logo"><div class="header-title">Representative DashBoards</div></header>
             <div class="container">
                 <div class="year-selector" id="year-4"></div>
                 <div class="metric-selector">
@@ -162,7 +124,7 @@
                     <button class="metric-btn" onclick="changeM4('expense',this)">経費残額</button>
                 </div>
                 <div class="chart-card"><canvas id="chart-4"></canvas></div>
-                <div class="stats-container"><div class="stats-title" id="title-4">実績</div><div id="cards-4"></div></div>
+                <div class="stats-container"><div id="cards-4"></div></div>
             </div>
         </div>
     </div>
@@ -187,18 +149,25 @@
         fcf:{u:'￥',s:'',d:0,t:'fcfTarget'}, balance:{u:'￥',s:'',d:0,t:'balanceTarget'}, expense:{u:'￥',s:'',d:0}
     };
 
-    const swiper = new Swiper('.swiper', { pagination: { el: '.swiper-pagination' } });
-
     async function init() {
         try {
             const res = await fetch(`${GAS_URL}?userId=${currentUserId}`);
             allData = await res.json();
             if (allData.status === 'success') {
+                const level = allData.myInfo.level;
+                if (level < 4) document.getElementById('slide-4').remove();
+                if (level < 3) document.getElementById('slide-3').remove();
+                if (level < 2) document.getElementById('slide-2').remove();
+
+                new Swiper('.swiper', { pagination: { el: '.swiper-pagination' } });
+
                 sY = [allData.yearList[0]];
                 const myStore = allData.staffList.find(s => s.name === allData.myInfo.userName)?.store || allData.storeList[0];
                 sK = allData.staffList.filter(s => s.store === myStore).map(s => s.name);
                 sS = [myStore]; sA = [myStore];
-                renderYears(); renderDrops(); updateM1(); updateM2(); updateM3(); updateM4();
+
+                renderYears(); renderDrops();
+                if(level>=1) updateM1(); if(level>=2) updateM2(); if(level>=3) updateM3(); if(level>=4) updateM4();
                 document.getElementById('loading').style.display = 'none';
             }
         } catch (e) { console.error(e); }
@@ -212,12 +181,14 @@
 
     function renderYears() {
         const h = allData.yearList.map(y => `<button class="year-btn ${sY.includes(y)?'active':''}" onclick="toggleY('${y}')">${y}年</button>`).join('');
-        ['1','2','3','4'].forEach(i => document.getElementById('year-'+i).innerHTML = h);
+        ['1','2','3','4'].forEach(i => { if(document.getElementById('year-'+i)) document.getElementById('year-'+i).innerHTML = h; });
     }
 
     function toggleY(y) {
         if (sY.includes(y)) { if(sY.length>1) sY = sY.filter(x=>x!==y); } else { sY.push(y); }
-        sY.sort().reverse(); renderYears(); updateM1(); updateM2(); updateM3(); updateM4();
+        sY.sort().reverse(); renderYears();
+        const lv = allData.myInfo.level;
+        if(lv>=1) updateM1(); if(lv>=2) updateM2(); if(lv>=3) updateM3(); if(lv>=4) updateM4();
     }
 
     function toggleD(id) { const el=document.getElementById(id); el.style.display=el.style.display==='block'?'none':'block'; }
@@ -229,9 +200,9 @@
                 h1 += `<div class="staff-option"><input type="checkbox" class="s-chk" data-store="${st}" value="${s.name}" ${sK.includes(s.name)?'checked':''} onchange="hSChange()"><label onclick="this.previousElementSibling.click()">${s.name}</label></div>`;
             });
         });
-        document.getElementById('drop-1').innerHTML = h1;
-        document.getElementById('drop-2').innerHTML = allData.storeList.map(st => `<div class="store-header"><input type="checkbox" class="m-chk" value="${st}" ${sS.includes(st)?'checked':''} onchange="hMChange()"><label onclick="this.previousElementSibling.click()">${st}</label></div>`).join('');
-        document.getElementById('drop-3').innerHTML = allData.storeList.map(st => `<div class="store-header"><input type="checkbox" class="a-chk" value="${st}" ${sA.includes(st)?'checked':''} onchange="hAChange()"><label onclick="this.previousElementSibling.click()">${st}</label></div>`).join('');
+        if(document.getElementById('drop-1')) document.getElementById('drop-1').innerHTML = h1;
+        if(document.getElementById('drop-2')) document.getElementById('drop-2').innerHTML = allData.storeList.map(st => `<div class="store-header"><input type="checkbox" class="m-chk" value="${st}" ${sS.includes(st)?'checked':''} onchange="hMChange()"><label onclick="this.previousElementSibling.click()">${st}</label></div>`).join('');
+        if(document.getElementById('drop-3')) document.getElementById('drop-3').innerHTML = allData.storeList.map(st => `<div class="store-header"><input type="checkbox" class="a-chk" value="${st}" ${sA.includes(st)?'checked':''} onchange="hAChange()"><label onclick="this.previousElementSibling.click()">${st}</label></div>`).join('');
         updateLabels();
     }
 
@@ -240,9 +211,9 @@
     function hMChange() { sS = Array.from(document.querySelectorAll('.m-chk:checked')).map(c=>c.value); updateLabels(); updateM2(); }
     function hAChange() { sA = Array.from(document.querySelectorAll('.a-chk:checked')).map(c=>c.value); updateLabels(); updateM3(); }
     function updateLabels() {
-        document.getElementById('label-1').innerText = sK.length + "名を選択中";
-        document.getElementById('label-2').innerText = sS.length + "店舗を選択中";
-        document.getElementById('label-3').innerText = sA.length + "店舗を選択中";
+        if(document.getElementById('label-1')) document.getElementById('label-1').innerText = sK.length + "名を選択中";
+        if(document.getElementById('label-2')) document.getElementById('label-2').innerText = sS.length + "店舗を選択中";
+        if(document.getElementById('label-3')) document.getElementById('label-3').innerText = sA.length + "店舗を選択中";
     }
 
     function changeM1(m,b) { document.querySelectorAll('#year-1 + .metric-selector .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m1=m; updateM1(); }
@@ -261,7 +232,6 @@
         });
         c1 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{ y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{callback:v=>getF(v,m1), color:'#aaa', font:{size:9}}}}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+getF(c.parsed.y,m1)}}}}});
         const yr = sY[0]; const mo = new Date().getMonth();
-        document.getElementById('title-1').innerText = (m1==='sales')? `${yr}年 ${mo+1}月 予測vs実績` : `${yr}年 ${mo+1}月 実績`;
         document.getElementById('cards-1').innerHTML = sK.map((n,i) => {
             const v = allData.chartData[yr]?.[n]?.[m1]?.[mo] || 0;
             const f = allData.chartData[yr]?.[n]?.['forecast']?.[mo] || 0;
@@ -296,7 +266,6 @@
         });
         c3 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{ y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{callback:v=>getF(v,m3), color:'#aaa', font:{size:9}}}}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+getF(c.parsed.y,m3)}}}}});
         const yr = sY[0]; const mo = new Date().getMonth();
-        document.getElementById('title-3').innerText = (m3==='storeSales')? `${yr}年 ${mo+1}月 目標vs実績` : `${yr}年 ${mo+1}月 実績`;
         document.getElementById('cards-3').innerHTML = sA.map((st,i) => {
             const v = allData.storeAnalysisData[yr]?.[st]?.[m3]?.[mo] || 0;
             const t = allData.storeAnalysisData[yr]?.[st]?.['storeTarget']?.[mo] || 0;
@@ -317,8 +286,7 @@
             ds.push({ label:'実績', data:d[m4], borderColor:'rgba(212,175,55,1)', borderWidth:3, pointRadius:4, pointHitRadius:30, tension:0.3, fill:false });
             if(f.t) ds.push({ label:'目標', data:d[f.t], borderColor:'rgba(255,255,255,0.3)', borderWidth:2, borderDash:[5,5], pointRadius:0, tension:0.3, fill:false });
         }
-        c4 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{callback:v=>getF(v,m4),color:'#aaa',font:{size:9}}}}, plugins:{legend:{display:true,labels:{color:'#fff',font:{size:9}}}, tooltip:{callbacks:{label:c=>c.dataset.label+ ': ' + getF(c.parsed.y, m4)}}}}});
-        
+        c4 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{callback:v=>getF(v,m4),color:'#aaa',font:{size:9}}}}, plugins:{legend:{display:true,labels:{color:'#fff',font:{size:9}}}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+getF(c.parsed.y,m4)}}}}});
         const mo = new Date().getMonth();
         if(m4==='expense') {
             document.getElementById('cards-4').innerHTML = `<div class="stat-card"><span class="stat-name">経費残額</span><div class="triple-grid"><div class="data-item"><span class="data-label">中園B</span><span class="data-value sub">${getF(d.nakazonoB[mo],'expense')}</span></div><div class="data-item"><span class="data-label">椹木B</span><span class="data-value sub">${getF(d.sawaragiB[mo],'expense')}</span></div><div class="data-item"><span class="data-label">江川B</span><span class="data-value sub">${getF(d.egawaB[mo],'expense')}</span></div></div></div>`;
