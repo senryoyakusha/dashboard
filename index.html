@@ -14,7 +14,6 @@
         :root { --bg: #121212; --card: #1e1e1e; --gold: #d4af37; --white: #ffffff; --gray: #2a2a2a; }
         body { font-family: sans-serif; background: var(--bg); color: var(--white); margin: 0; overflow: hidden; width: 100vw; height: 100vh; }
         
-        /* ヘッダー修正：ロゴとタイトルが被らないレイアウト */
         header { 
             height: 60px; 
             background: var(--card); 
@@ -30,10 +29,11 @@
             color: var(--gold); 
             font-weight: bold; 
             letter-spacing: 0.5px; 
-            font-size: 0.8rem; 
+            font-size: 0.75rem; 
             text-transform: uppercase; 
-            margin-left: auto; /* 右側に寄せる */
+            margin-left: auto; 
             text-align: right;
+            max-width: 60%;
         }
         
         .swiper { width: 100%; height: 100%; }
@@ -189,44 +189,39 @@
             
             if (allData.status === 'success') {
                 const level = allData.myInfo.level;
-                const uName = allData.myInfo.userName; // 名前（スペースなし）
+                const uName = allData.myInfo.userName;
 
-                // 1. 権限のないスライドを消す
                 if (level < 4) { const s = document.getElementById('slide-4'); if(s) s.remove(); }
                 if (level < 3) { const s = document.getElementById('slide-3'); if(s) s.remove(); }
                 if (level < 2) { const s = document.getElementById('slide-2'); if(s) s.remove(); }
 
-                // 2. Swiper初期化
                 swiperInstance = new Swiper('.swiper', { 
                     pagination: { el: '.swiper-pagination', clickable: true },
                     observer: true, observeParents: true, threshold: 15, resistanceRatio: 0, touchStartPreventDefault: false
                 });
 
-                // 3. デフォルト選択の絞り込み（自分・自店舗のみ）
                 sY = [allData.yearList[0]];
                 const myInfo = allData.staffList.find(s => s.name.replace(/\s+/g, "") === uName);
                 const myStore = myInfo ? myInfo.store : allData.storeList[0];
                 
                 sK = [allData.staffList.find(s => s.name.replace(/\s+/g, "") === uName)?.name].filter(Boolean);
-                if(sK.length === 0) sK = [allData.staffList[0].name]; // 万が一自分が見つからない場合
-
+                if(sK.length === 0) sK = [allData.staffList[0].name];
                 sS = [myStore]; 
                 sA = [myStore];
 
-                // 4. 描画コンポーネントの構築
                 renderYears(); 
                 renderDrops();
 
-                // 5. 高速化：Promise.allで並列描画
-                const drawTasks = [];
-                if(level>=1) drawTasks.push(updateM1());
-                if(level>=2) drawTasks.push(updateM2());
-                if(level>=3) drawTasks.push(updateM3());
-                if(level>=4) drawTasks.push(updateM4());
-                
-                await Promise.all(drawTasks);
-                
+                // 1枚目(Staff)を最速で描画して、即座にローディングを隠す
+                await updateM1(); 
                 document.getElementById('loading').style.display = 'none';
+
+                // 残りの描画を時間差で実行してCPU負荷を分散
+                setTimeout(() => {
+                    if(level>=2) updateM2();
+                    if(level>=3) updateM3();
+                    if(level>=4) updateM4();
+                }, 300);
             }
         } catch (e) { document.getElementById('loading-text').innerText = "Fetch Error: " + e; }
     }
