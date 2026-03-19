@@ -8,8 +8,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
     <style>
-        :root { --bg: #121212; --card: #1e1e1e; --gold: #d4af37; --white: #ffffff; --gray: #2a2a2a; --blue: #3498db; }
+        :root { --bg: #121212; --card: #1e1e1e; --gold: #d4af37; --white: #ffffff; --gray: #2a2a2a; }
         body { font-family: sans-serif; background: var(--bg); color: var(--white); margin: 0; overflow: hidden; }
         header { padding: 15px; background: var(--card); border-bottom: 1px solid #333; text-align: center; color: var(--gold); font-weight: bold; letter-spacing: 2px; }
         .container { width: 94%; max-width: 500px; margin: 10px auto; padding-bottom: 80px; }
@@ -31,35 +32,94 @@
         .triple-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; border-top: 1px solid #333; margin-top: 10px; padding-top: 10px;}
         .data-label { font-size: 0.6rem; color: #aaa; margin-bottom: 2px; }
         .data-value { font-size: 1.1rem; color: var(--gold); font-weight: bold; }
-        .data-value.sub { color: #eee; font-size: 0.95rem; }
+        .data-value.sub { color: #eee; font-size: 0.9rem; }
         #loading { text-align: center; margin-top: 80px; color: var(--gold); position: absolute; width: 100%; z-index: 9999; }
         input[type="checkbox"] { transform: scale(1.3); accent-color: var(--gold); }
+        label { cursor: pointer; flex-grow: 1; }
     </style>
 </head>
 <body>
 
-<div id="loading"><i class="fas fa-circle-notch fa-spin fa-2x"></i><p>Loading...</p></div>
+<div id="loading"><i class="fas fa-circle-notch fa-spin fa-2x"></i><p>Loading Dashboard...</p></div>
 
 <div class="swiper">
     <div class="swiper-wrapper">
-        <div class="swiper-slide"><header>SALES PERFORMANCE</header><div class="container" id="page-1-content"></div></div>
-        <div class="swiper-slide"><header>COST ANALYSIS</header><div class="container" id="page-2-content"></div></div>
-        <div class="swiper-slide"><header>STORE ANALYSIS</header><div class="container" id="page-3-content"></div></div>
+        <div class="swiper-slide">
+            <header>SALES PERFORMANCE</header>
+            <div class="container">
+                <div class="year-selector" id="year-1"></div>
+                <div class="metric-selector">
+                    <button class="metric-btn active" onclick="changeM1('sales',this)">総売上</button>
+                    <button class="metric-btn" onclick="changeM1('shimeiSales',this)">指名売上</button>
+                    <button class="metric-btn" onclick="changeM1('timePrice',this)">時間単価</button>
+                    <button class="metric-btn" onclick="changeM1('shimeiCount',this)">指名客数</button>
+                    <button class="metric-btn" onclick="changeM1('nextReserve',this)">次回予約率</button>
+                    <button class="metric-btn" onclick="changeM1('newRepeat',this)">新規再来率</button>
+                </div>
+                <div class="select-box" onclick="toggleD('drop-1')"><span id="label-1">スタッフを選択</span><i class="fas fa-users"></i></div>
+                <div id="drop-1" class="dropdown"></div>
+                <div class="chart-card"><canvas id="chart-1"></canvas></div>
+                <div class="stats-container"><div class="stats-title" id="title-1">実績</div><div id="cards-1"></div></div>
+            </div>
+        </div>
 
         <div class="swiper-slide">
-            <header>COMPANY DASHBOARD</header>
+            <header>COST ANALYSIS</header>
             <div class="container">
-                <div class="year-selector" id="year-selector-4"></div>
+                <div class="year-selector" id="year-2"></div>
                 <div class="metric-selector">
-                    <button class="metric-btn active" onclick="changeComMetric('totalSales', this)">売上</button>
-                    <button class="metric-btn" onclick="changeComMetric('storeProfit', this)">店舗営業利益</button>
-                    <button class="metric-btn" onclick="changeComMetric('companyProfit', this)">社内全体利益</button>
-                    <button class="metric-btn" onclick="changeComMetric('fcf', this)">FCF</button>
-                    <button class="metric-btn" onclick="changeComMetric('balance', this)">口座残高</button>
-                    <button class="metric-btn" onclick="changeComMetric('expense', this)">経費残額</button>
+                    <button class="metric-btn active" onclick="changeM2('totalRate',this)">全体材料費率</button>
+                    <button class="metric-btn" onclick="changeM2('techRate',this)">技術材料費率</button>
+                    <button class="metric-btn" onclick="changeM2('orderableAmount',this)">注文可能額</button>
+                    <button class="metric-btn" onclick="changeM2('colorRate',this)">カラー材料費率</button>
+                    <button class="metric-btn" onclick="changeM2('treatmentRate',this)">トリートメント率</button>
+                    <button class="metric-btn" onclick="changeM2('permRate',this)">パーマ比率</button>
                 </div>
-                <div class="chart-card"><canvas id="comChart"></canvas></div>
-                <div class="stats-container"><div class="stats-title" id="com-title">経営実績</div><div id="com-cards-list"></div></div>
+                <div class="select-box" onclick="toggleD('drop-2')"><span id="label-2">店舗を選択</span><i class="fas fa-store"></i></div>
+                <div id="drop-2" class="dropdown"></div>
+                <div class="chart-card"><canvas id="chart-2"></canvas></div>
+                <div class="stats-container"><div class="stats-title">材料費実績</div><div id="cards-2"></div></div>
+            </div>
+        </div>
+
+        <div class="swiper-slide">
+            <header>STORE ANALYSIS</header>
+            <div class="container">
+                <div class="year-selector" id="year-3"></div>
+                <div class="metric-selector">
+                    <button class="metric-btn active" onclick="changeM3('storeSales', this)">総売上</button>
+                    <button class="metric-btn" onclick="changeM3('storeAchieveRate', this)">総売上達成率</button>
+                    <button class="metric-btn" onclick="changeM3('storeProfit', this)">店舗利益</button>
+                    <button class="metric-btn" onclick="changeM3('storeTech', this)">技術売上</button>
+                    <button class="metric-btn" onclick="changeM3('storeTenba', this)">店販売上</button>
+                    <button class="metric-btn" onclick="changeM3('storeShimei', this)">指名売上</button>
+                    <button class="metric-btn" onclick="changeM3('storeHourPrice', this)">時間単価</button>
+                    <button class="metric-btn" onclick="changeM3('storeNextRate', this)">次回予約率</button>
+                    <button class="metric-btn" onclick="changeM3('storeAvgPrice', this)">客単価</button>
+                    <button class="metric-btn" onclick="changeM3('storeNewCount', this)">新規客数</button>
+                    <button class="metric-btn" onclick="changeM3('storeNewRepeat', this)">新規再来率</button>
+                </div>
+                <div class="select-box" onclick="toggleD('drop-3')"><span id="label-3">店舗を選択</span><i class="fas fa-chart-line"></i></div>
+                <div id="drop-3" class="dropdown"></div>
+                <div class="chart-card"><canvas id="chart-3"></canvas></div>
+                <div class="stats-container"><div class="stats-title" id="title-3">実績</div><div id="cards-3"></div></div>
+            </div>
+        </div>
+
+        <div class="swiper-slide">
+            <header>COMPANY ANALYSIS</header>
+            <div class="container">
+                <div class="year-selector" id="year-4"></div>
+                <div class="metric-selector">
+                    <button class="metric-btn active" onclick="changeM4('totalSales',this)">全社売上</button>
+                    <button class="metric-btn" onclick="changeM4('storeProfit',this)">店舗利益計</button>
+                    <button class="metric-btn" onclick="changeM4('companyProfit',this)">全社利益</button>
+                    <button class="metric-btn" onclick="changeM4('fcf',this)">FCF</button>
+                    <button class="metric-btn" onclick="changeM4('balance',this)">口座残高</button>
+                    <button class="metric-btn" onclick="changeM4('expense',this)">経費残額</button>
+                </div>
+                <div class="chart-card"><canvas id="chart-4"></canvas></div>
+                <div class="stats-container"><div class="stats-title" id="title-4">実績</div><div id="cards-4"></div></div>
             </div>
         </div>
     </div>
@@ -69,100 +129,174 @@
 <script>
     const GAS_URL = "https://script.google.com/a/macros/senryoyakusha.com/s/AKfycbxAzSojBu5Tjzjge2akg4d_VKGdl6ZCYoEjaRRKiZaRI5DXfFEdkH8MKwW2eI2UgCc/exec";
     const currentUserId = "user_gps3atgzq"; 
-    const BASE_COLORS = ['rgba(212, 175, 55', 'rgba(52, 152, 219', 'rgba(231, 76, 60', 'rgba(46, 204, 113'];
+    const COLORS = ['rgba(212,175,55','rgba(52,152,219','rgba(231,76,60','rgba(46,204,113','rgba(155,89,182','rgba(241,196,15','rgba(26,188,156','rgba(230,126,34'];
 
-    let allData = null, comChart = null;
-    let selectedYears = [], currentComMetric = 'totalSales';
+    let allData = null, c1=null, c2=null, c3=null, c4=null;
+    let sK=[], sY=[], sS=[], sA=[], m1='sales', m2='totalRate', m3='storeSales', m4='totalSales';
     
     const formats = {
-        totalSales: { u: '￥', s: '', d: 0, t: 'totalSalesTarget', r: 'totalSalesRate' },
-        storeProfit: { u: '￥', s: '', d: 0, t: 'storeProfitTarget', r: 'storeProfitRate' },
-        companyProfit: { u: '￥', s: '', d: 0, t: 'companyProfitTarget', r: 'companyProfitRate' },
-        fcf: { u: '￥', s: '', d: 0, t: 'fcfTarget' },
-        balance: { u: '￥', s: '', d: 0, t: 'balanceTarget' },
-        expense: { u: '￥', s: '', d: 0 },
-        // ... (以前の指標フォーマットも維持)
+        sales:{u:'￥',s:'',d:0,t:'forecast'}, shimeiSales:{u:'￥',s:'',d:0}, timePrice:{u:'￥',s:'',d:0}, shimeiCount:{u:'',s:'名',d:0}, nextReserve:{u:'',s:'％',d:2}, newRepeat:{u:'',s:'％',d:2},
+        totalRate:{u:'',s:'％',d:2}, techRate:{u:'',s:'％',d:2}, orderableAmount:{u:'￥',s:'',d:0}, colorRate:{u:'',s:'％',d:2}, treatmentRate:{u:'',s:'％',d:2}, permRate:{u:'',s:'％',d:2},
+        storeSales:{u:'￥',s:'',d:0,t:'storeTarget'}, storeAchieveRate:{u:'',s:'％',d:2}, storeProfit:{u:'￥',s:'',d:0}, storeShimei:{u:'￥',s:'',d:0}, storeTech:{u:'￥',s:'',d:0}, storeTenba:{u:'￥',s:'',d:0}, storeAvgPrice:{u:'￥',s:'',d:0}, storeNewCount:{u:'',s:'名',d:0}, storeHourPrice:{u:'￥',s:'',d:0}, storeNextRate:{u:'',s:'％',d:2}, storeNewRepeat:{u:'',s:'％',d:2},
+        totalSales:{u:'￥',s:'',d:0,t:'totalSalesTarget',r:'totalSalesRate'}, storeProfitRate:{u:'',s:'％',d:2,t:'storeProfitTarget'}, companyProfit:{u:'￥',s:'',d:0,t:'companyProfitTarget',r:'companyProfitRate'}, fcf:{u:'￥',s:'',d:0,t:'fcfTarget'}, balance:{u:'￥',s:'',d:0,t:'balanceTarget'}, expense:{u:'￥',s:'',d:0}
     };
 
     const swiper = new Swiper('.swiper', { pagination: { el: '.swiper-pagination' } });
 
     async function init() {
-        const res = await fetch(`${GAS_URL}?userId=${currentUserId}`);
-        allData = await res.json();
-        if (allData.status === 'success') {
-            selectedYears = [allData.yearList[0]];
-            renderYearSelectors();
-            updateComDisplay();
-            // (1〜3枚目の描画ロジックもここに記述)
-            document.getElementById('loading').style.display = 'none';
-        }
+        try {
+            const res = await fetch(`${GAS_URL}?userId=${currentUserId}`);
+            allData = await res.json();
+            if (allData.status === 'success') {
+                sY = [allData.yearList[0]];
+                const myStore = allData.staffList.find(s => s.name === allData.myInfo.userName)?.store || allData.storeList[0];
+                sK = allData.staffList.filter(s => s.store === myStore).map(s => s.name);
+                sS = [myStore]; sA = [myStore];
+                
+                renderYears(); 
+                renderDrops(); 
+                updateM1(); updateM2(); updateM3(); updateM4();
+                
+                document.getElementById('loading').style.display = 'none';
+            }
+        } catch (e) { console.error(e); }
     }
 
-    function getFormatted(val, metric) {
-        const f = formats[metric] || { u: '', s: '', d: 0 };
-        let dVal = Number(val); if (f.s === '％') dVal *= 100;
-        return f.u + dVal.toLocaleString(undefined, {minimumFractionDigits: f.d, maximumFractionDigits: f.d}) + f.s;
+    function getF(v, m) {
+        const f = formats[m] || {u:'',s:'',d:0};
+        let dv = Number(v); if (f.s === '％') dv *= 100;
+        return f.u + dv.toLocaleString(undefined,{minimumFractionDigits:f.d, maximumFractionDigits:f.d}) + f.s;
     }
 
-    function changeComMetric(m, btn) {
-        document.querySelectorAll('#year-selector-4 + .metric-selector .metric-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active'); currentComMetric = m; updateComDisplay();
+    function renderYears() {
+        const h = allData.yearList.map(y => `<button class="year-btn ${sY.includes(y)?'active':''}" onclick="toggleY('${y}')">${y}年</button>`).join('');
+        ['1','2','3','4'].forEach(i => document.getElementById('year-'+i).innerHTML = h);
     }
 
-    function updateComDisplay() { updateComChart(); updateComCards(); }
-
-    function updateComCards() {
-        const list = document.getElementById('com-cards-list'); const year = selectedYears[0]; const month = new Date().getMonth();
-        const f = formats[currentComMetric];
-        const data = allData.companyData[year];
-        let html = "";
-
-        if (currentComMetric === 'expense') {
-            html = `<div class="stat-card"><span class="stat-name">経費残額</span><div class="triple-grid">
-                <div class="data-item"><span class="data-label">中園B</span><span class="data-value" style="font-size:0.9rem">${getFormatted(data.nakazonoB[month],'expense')}</span></div>
-                <div class="data-item"><span class="data-label">椹木B</span><span class="data-value" style="font-size:0.9rem">${getFormatted(data.sawaragiB[month],'expense')}</span></div>
-                <div class="data-item"><span class="data-label">江川B</span><span class="data-value" style="font-size:0.9rem">${getFormatted(data.egawaB[month],'expense')}</span></div>
-            </div></div>`;
-        } else {
-            const val = data[currentComMetric][month];
-            const target = f.t ? data[f.t][month] : 0;
-            const rate = f.r ? data[f.r][month] : null;
-            html = `<div class="stat-card"><div style="display:flex;justify-content:space-between"><span>実績数値</span>${rate ? `<span style="color:var(--gold)">達成率: ${(rate*100).toFixed(1)}%</span>` : ''}</div>
-                <div class="comparison-grid">
-                    <div class="data-item"><span class="data-label">目標</span><span class="data-value sub">${getFormatted(target,currentComMetric)}</span></div>
-                    <div class="data-item"><span class="data-label">実績</span><span class="data-value">${getFormatted(val,currentComMetric)}</span></div>
-                </div></div>`;
-        }
-        list.innerHTML = html;
+    function toggleY(y) {
+        if (sY.includes(y)) { if(sY.length>1) sY = sY.filter(x=>x!==y); } else { sY.push(y); }
+        sY.sort().reverse(); renderYears(); updateM1(); updateM2(); updateM3(); updateM4();
     }
 
-    function updateComChart() {
-        const ctx = document.getElementById('comChart').getContext('2d'); if (comChart) comChart.destroy();
-        const datasets = []; const year = selectedYears[0];
-        const f = formats[currentComMetric];
-        const data = allData.companyData[year];
+    function toggleD(id) { const el=document.getElementById(id); el.style.display=el.style.display==='block'?'none':'block'; }
 
-        if (currentComMetric === 'expense') {
-            // 経費は3人分出す
+    function renderDrops() {
+        let h1 = ""; allData.storeList.forEach(st => {
+            h1 += `<div class="store-header"><input type="checkbox" id="ps-${st}" onchange="tSStore('${st}',this)"><label for="ps-${st}">${st} (全員)</label></div>`;
+            allData.staffList.filter(s=>s.store===st).forEach(s=>{
+                h1 += `<div class="staff-option"><input type="checkbox" class="s-chk" data-store="${st}" value="${s.name}" ${sK.includes(s.name)?'checked':''} onchange="hSChange()"><label onclick="this.previousElementSibling.click()">${s.name}</label></div>`;
+            });
+        });
+        document.getElementById('drop-1').innerHTML = h1;
+        document.getElementById('drop-2').innerHTML = allData.storeList.map(st => `<div class="store-header"><input type="checkbox" class="m-chk" value="${st}" ${sS.includes(st)?'checked':''} onchange="hMChange()"><label onclick="this.previousElementSibling.click()">${st}</label></div>`).join('');
+        document.getElementById('drop-3').innerHTML = allData.storeList.map(st => `<div class="store-header"><input type="checkbox" class="a-chk" value="${st}" ${sA.includes(st)?'checked':''} onchange="hAChange()"><label onclick="this.previousElementSibling.click()">${st}</label></div>`).join('');
+        updateLabels();
+    }
+
+    function tSStore(s, el) { document.querySelectorAll(`.s-chk[data-store="${s}"]`).forEach(c=>c.checked=el.checked); hSChange(); }
+    function hSChange() { sK = Array.from(document.querySelectorAll('.s-chk:checked')).map(c=>c.value); updateLabels(); updateM1(); }
+    function hMChange() { sS = Array.from(document.querySelectorAll('.m-chk:checked')).map(c=>c.value); updateLabels(); updateM2(); }
+    function hAChange() { sA = Array.from(document.querySelectorAll('.a-chk:checked')).map(c=>c.value); updateLabels(); updateM3(); }
+    
+    function updateLabels() {
+        document.getElementById('label-1').innerText = sK.length + "名を選択中";
+        document.getElementById('label-2').innerText = sS.length + "店舗を選択中";
+        document.getElementById('label-3').innerText = sA.length + "店舗を選択中";
+    }
+
+    function changeM1(m,b) { document.querySelectorAll('#year-1 + .metric-selector .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m1=m; updateM1(); }
+    function changeM2(m,b) { document.querySelectorAll('#year-2 + .metric-selector .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m2=m; updateM2(); }
+    function changeM3(m,b) { document.querySelectorAll('#year-3 + .metric-selector .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m3=m; updateM3(); }
+    function changeM4(m,b) { document.querySelectorAll('#year-4 + .metric-selector .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m4=m; updateM4(); }
+
+    // --- 描画関数1: SALES ---
+    function updateM1() {
+        const ctx = document.getElementById('chart-1').getContext('2d'); if(c1) c1.destroy();
+        const ds = [];
+        sK.forEach((key, i) => {
+            const base = COLORS[i % COLORS.length];
+            sY.forEach((y, yIdx) => {
+                const color = `${base}, ${Math.max(1-(yIdx*0.4),0.2)})`;
+                ds.push({ label:`${key}(${y})`, data: allData.chartData[y]?.[key]?.[m1] || new Array(12).fill(0), borderColor:color, backgroundColor:color, borderWidth:yIdx===0?3:1.5, pointRadius:yIdx===0?4:2, pointHitRadius:30, tension:0.3, fill:false });
+            });
+        });
+        c1 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{ y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{callback:v=>getF(v,m1), color:'#aaa', font:{size:9}}}}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+getF(c.parsed.y,m1)}}}}});
+        
+        const yr = sY[0]; const mo = new Date().getMonth();
+        document.getElementById('title-1').innerText = (m1==='sales')? `${yr}年 ${mo+1}月 予測vs実績` : `${yr}年 ${mo+1}月 実績`;
+        document.getElementById('cards-1').innerHTML = sK.map((n,i) => {
+            const v = allData.chartData[yr]?.[n]?.[m1]?.[mo] || 0;
+            const f = allData.chartData[yr]?.[n]?.['forecast']?.[mo] || 0;
+            const c = `rgba(${COLORS[i % COLORS.length]}, 1)`;
+            if(m1==='sales') return `<div class="stat-card" style="border-left-color:${c}"><span class="stat-name">${n}</span><div class="comparison-grid"><div class="data-item"><span class="data-label">予測</span><span class="data-value sub">${getF(f,'sales')}</span></div><div class="data-item"><span class="data-label">実績</span><span class="data-value">${getF(v,m1)}</span></div></div></div>`;
+            return `<div class="stat-card" style="border-left-color:${c}"><div class="stat-row"><span class="stat-name">${n}</span><span class="data-value">${getF(v,m1)}</span></div></div>`;
+        }).join('');
+    }
+
+    // --- 描画関数2: COST ---
+    function updateM2() {
+        const ctx = document.getElementById('chart-2').getContext('2d'); if(c2) c2.destroy();
+        const ds = [];
+        sS.forEach((key, i) => {
+            const base = COLORS[i % COLORS.length];
+            sY.forEach((y, yIdx) => {
+                const color = `${base}, ${Math.max(1-(yIdx*0.4),0.2)})`;
+                ds.push({ label:`${key}(${y})`, data: allData.materialData[y]?.[key]?.[m2] || new Array(12).fill(0), borderColor:color, backgroundColor:color, borderWidth:yIdx===0?3:1.5, pointRadius:yIdx===0?4:2, pointHitRadius:30, tension:0.3, fill:false });
+            });
+        });
+        c2 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{ y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{callback:v=>getF(v,m2), color:'#aaa', font:{size:9}}}}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+getF(c.parsed.y,m2)}}}}});
+        
+        const yr = sY[0]; const mo = new Date().getMonth();
+        document.getElementById('cards-2').innerHTML = sS.map((st,i) => `<div class="stat-card" style="border-left-color:rgba(${COLORS[i % COLORS.length]},1)"><div class="stat-row"><span class="stat-name">${st}</span><span class="data-value">${getF(allData.materialData[yr]?.[st]?.[m2]?.[mo]||0,m2)}</span></div></div>`).join('');
+    }
+
+    // --- 描画関数3: STORE ---
+    function updateM3() {
+        const ctx = document.getElementById('chart-3').getContext('2d'); if(c3) c3.destroy();
+        const ds = [];
+        sA.forEach((key, i) => {
+            const base = COLORS[i % COLORS.length];
+            sY.forEach((y, yIdx) => {
+                const color = `${base}, ${Math.max(1-(yIdx*0.4),0.2)})`;
+                ds.push({ label:`${key}(${y})`, data: allData.storeAnalysisData[y]?.[key]?.[m3] || new Array(12).fill(0), borderColor:color, backgroundColor:color, borderWidth:yIdx===0?3:1.5, pointRadius:yIdx===0?4:2, pointHitRadius:30, tension:0.3, fill:false });
+            });
+        });
+        c3 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{ y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{callback:v=>getF(v,m3), color:'#aaa', font:{size:9}}}}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+getF(c.parsed.y,m3)}}}}});
+        
+        const yr = sY[0]; const mo = new Date().getMonth();
+        document.getElementById('title-3').innerText = (m3==='storeSales')? `${yr}年 ${mo+1}月 目標vs実績` : `${yr}年 ${mo+1}月 実績`;
+        document.getElementById('cards-3').innerHTML = sA.map((st,i) => {
+            const v = allData.storeAnalysisData[yr]?.[st]?.[m3]?.[mo] || 0;
+            const t = allData.storeAnalysisData[yr]?.[st]?.['storeTarget']?.[mo] || 0;
+            const c = `rgba(${COLORS[i % COLORS.length]}, 1)`;
+            if(m3==='storeSales') return `<div class="stat-card" style="border-left-color:${c}"><span class="stat-name">${st}</span><div class="comparison-grid"><div class="data-item"><span class="data-label">目標</span><span class="data-value sub">${getF(t,'storeSales')}</span></div><div class="data-item"><span class="data-label">実績</span><span class="data-value">${getF(v,m3)}</span></div></div></div>`;
+            return `<div class="stat-card" style="border-left-color:${c}"><div class="stat-row"><span class="stat-name">${st}</span><span class="data-value">${getF(v,m3)}</span></div></div>`;
+        }).join('');
+    }
+
+    // --- 描画関数4: COMPANY ---
+    function updateM4() {
+        const ctx = document.getElementById('chart-4').getContext('2d'); if(c4) c4.destroy();
+        const ds = []; const yr = sY[0]; const d = allData.companyData[yr]; const f = formats[m4];
+        if(m4==='expense') {
             [['nakazonoB','中園B','#d4af37'],['sawaragiB','椹木B','#3498db'],['egawaB','江川B','#e74c3c']].forEach(p => {
-                datasets.push({ label: p[1], data: data[p[0]], borderColor: p[2], borderWidth: 2, pointRadius: 3, tension: 0.3, fill: false });
+                ds.push({ label:p[1], data:d[p[0]], borderColor:p[2], borderWidth:2, pointRadius:3, pointHitRadius:30, tension:0.3, fill:false });
             });
         } else {
-            // 実績ライン
-            datasets.push({ label: '実績', data: data[currentComMetric], borderColor: 'rgba(212,175,55,1)', borderWidth: 3, pointRadius: 4, pointHitRadius: 30, tension: 0.3, fill: false });
-            // 目標ライン (点線)
-            if (f.t) {
-                datasets.push({ label: '目標', data: data[f.t], borderColor: 'rgba(255,255,255,0.3)', borderWidth: 2, borderDash: [5,5], pointRadius: 0, tension: 0.3, fill: false });
-            }
+            ds.push({ label:'実績', data:d[m4], borderColor:'rgba(212,175,55,1)', borderWidth:3, pointRadius:4, pointHitRadius:30, tension:0.3, fill:false });
+            if(f.t) ds.push({ label:'目標', data:d[f.t], borderColor:'rgba(255,255,255,0.3)', borderWidth:2, borderDash:[5,5], pointRadius:0, tension:0.3, fill:false });
         }
-
-        comChart = new Chart(ctx, {
-            type: 'line',
-            data: { labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets },
-            options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => getFormatted(v, currentComMetric), color: '#aaa', font: { size: 9 } } } }, plugins: { legend: { display: true, labels: { color: '#fff', font: { size: 9 } } } } }
-        });
+        c4 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{callback:v=>getF(v,m4),color:'#aaa',font:{size:9}}}}, plugins:{legend:{display:true,labels:{color:'#fff',font:{size:9}}}}}});
+        
+        const mo = new Date().getMonth();
+        if(m4==='expense') {
+            document.getElementById('cards-4').innerHTML = `<div class="stat-card"><span class="stat-name">経費残額</span><div class="triple-grid"><div class="data-item"><span class="data-label">中園B</span><span class="data-value sub">${getF(d.nakazonoB[mo],'expense')}</span></div><div class="data-item"><span class="data-label">椹木B</span><span class="data-value sub">${getF(d.sawaragiB[mo],'expense')}</span></div><div class="data-item"><span class="data-label">江川B</span><span class="data-value sub">${getF(d.egawaB[mo],'expense')}</span></div></div></div>`;
+        } else {
+            const v = d[m4][mo]; const t = f.t ? d[f.t][mo] : 0; const r = f.r ? d[f.r][mo] : null;
+            document.getElementById('cards-4').innerHTML = `<div class="stat-card"><div style="display:flex;justify-content:space-between"><span>実績</span>${r?`<span style="color:var(--gold)">達成率: ${(r*100).toFixed(1)}%</span>`:''}</div><div class="comparison-grid"><div class="data-item"><span class="data-label">目標</span><span class="data-value sub">${getF(t,m4)}</span></div><div class="data-item"><span class="data-label">実績</span><span class="data-value">${getF(v,m4)}</span></div></div></div>`;
+        }
     }
-
+    
     init();
 </script>
 </body>
