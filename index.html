@@ -36,12 +36,11 @@
         #loading { text-align: center; margin-top: 80px; color: var(--gold); position: absolute; width: 100%; z-index: 9999; }
         input[type="checkbox"] { transform: scale(1.3); accent-color: var(--gold); }
         label { cursor: pointer; flex-grow: 1; }
-        .swiper-pagination-bullet-active { background: var(--gold); }
     </style>
 </head>
 <body>
 
-<div id="loading"><i class="fas fa-circle-notch fa-spin fa-2x"></i><p>Loading All Systems...</p></div>
+<div id="loading"><i class="fas fa-circle-notch fa-spin fa-2x"></i><p>Loading Dashboard...</p></div>
 
 <div class="swiper">
     <div class="swiper-wrapper">
@@ -89,8 +88,8 @@
                 <div class="year-selector" id="year-3"></div>
                 <div class="metric-selector">
                     <button class="metric-btn active" onclick="changeM3('storeSales', this)">総売上</button>
-                    <button class="metric-btn" onclick="changeM3('storeAchieveRate', this)">総売上達成率</button>
-                    <button class="metric-btn" onclick="changeM3('storeProfit', this)">店舗営業利益</button>
+                    <button class="metric-btn" onclick="changeM3('storeAchieveRate', this)">達成率</button>
+                    <button class="metric-btn" onclick="changeM3('storeProfit', this)">店舗利益</button>
                     <button class="metric-btn" onclick="changeM3('storeTech', this)">技術売上</button>
                     <button class="metric-btn" onclick="changeM3('storeTenba', this)">店販売上</button>
                     <button class="metric-btn" onclick="changeM3('storeShimei', this)">指名売上</button>
@@ -113,9 +112,9 @@
                 <div class="year-selector" id="year-4"></div>
                 <div class="metric-selector">
                     <button class="metric-btn active" onclick="changeM4('totalSales',this)">全社売上</button>
-                    <button class="metric-btn" onclick="changeM4('totalSalesRate',this)">全社売上達成率</button>
+                    <button class="metric-btn" onclick="changeM4('totalSalesRate',this)">売上達成率</button>
                     <button class="metric-btn" onclick="changeM4('storeProfit',this)">店舗利益計</button>
-                    <button class="metric-btn" onclick="changeM4('storeProfitRate',this)">店舗利益達成率</button>
+                    <button class="metric-btn" onclick="changeM4('storeProfitRate',this)">利益達成率</button>
                     <button class="metric-btn" onclick="changeM4('companyProfit',this)">全社利益</button>
                     <button class="metric-btn" onclick="changeM4('companyProfitRate',this)">全社利益達成率</button>
                     <button class="metric-btn" onclick="changeM4('fcf',this)">FCF</button>
@@ -123,7 +122,7 @@
                     <button class="metric-btn" onclick="changeM4('expense',this)">経費残額</button>
                 </div>
                 <div class="chart-card"><canvas id="chart-4"></canvas></div>
-                <div class="stats-container"><div class="stats-title" id="title-4">全社実績データ</div><div id="cards-4"></div></div>
+                <div class="stats-container"><div class="stats-title" id="title-4">実績</div><div id="cards-4"></div></div>
             </div>
         </div>
     </div>
@@ -138,6 +137,7 @@
     let allData = null, c1=null, c2=null, c3=null, c4=null;
     let sK=[], sY=[], sS=[], sA=[], m1='sales', m2='totalRate', m3='storeSales', m4='totalSales';
     
+    // 全ての単位設定
     const formats = {
         sales:{u:'￥',s:'',d:0,t:'forecast'}, shimeiSales:{u:'￥',s:'',d:0}, timePrice:{u:'￥',s:'',d:0}, shimeiCount:{u:'',s:'名',d:0}, nextReserve:{u:'',s:'％',d:2}, newRepeat:{u:'',s:'％',d:2},
         totalRate:{u:'',s:'％',d:2}, techRate:{u:'',s:'％',d:2}, orderableAmount:{u:'￥',s:'',d:0}, colorRate:{u:'',s:'％',d:2}, treatmentRate:{u:'',s:'％',d:2}, permRate:{u:'',s:'％',d:2},
@@ -222,7 +222,6 @@
         });
         c1 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{ y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{callback:v=>getF(v,m1), color:'#aaa', font:{size:9}}}}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+getF(c.parsed.y,m1)}}}}});
         const yr = sY[0]; const mo = new Date().getMonth();
-        document.getElementById('title-1').innerText = (m1==='sales')? `${yr}年 ${mo+1}月 予測vs実績` : `${yr}年 ${mo+1}月 実績`;
         document.getElementById('cards-1').innerHTML = sK.map((n,i) => {
             const v = allData.chartData[yr]?.[n]?.[m1]?.[mo] || 0;
             const f = allData.chartData[yr]?.[n]?.['forecast']?.[mo] || 0;
@@ -257,7 +256,6 @@
         });
         c3 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{ y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{callback:v=>getF(v,m3), color:'#aaa', font:{size:9}}}}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+getF(c.parsed.y,m3)}}}}});
         const yr = sY[0]; const mo = new Date().getMonth();
-        document.getElementById('title-3').innerText = (m3==='storeSales')? `${yr}年 ${mo+1}月 目標vs実績` : `${yr}年 ${mo+1}月 実績`;
         document.getElementById('cards-3').innerHTML = sA.map((st,i) => {
             const v = allData.storeAnalysisData[yr]?.[st]?.[m3]?.[mo] || 0;
             const t = allData.storeAnalysisData[yr]?.[st]?.['storeTarget']?.[mo] || 0;
@@ -278,19 +276,19 @@
             ds.push({ label:'実績', data:d[m4], borderColor:'rgba(212,175,55,1)', borderWidth:3, pointRadius:4, pointHitRadius:30, tension:0.3, fill:false });
             if(f.t) ds.push({ label:'目標', data:d[f.t], borderColor:'rgba(255,255,255,0.3)', borderWidth:2, borderDash:[5,5], pointRadius:0, tension:0.3, fill:false });
         }
-        c4 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{callback:v=>getF(v,m4),color:'#aaa',font:{size:9}}}}, plugins:{legend:{display:true,labels:{color:'#fff',font:{size:9}}}}}});
+        c4 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{callback:v=>getF(v,m4),color:'#aaa',font:{size:9}}}}, plugins:{legend:{display:true,labels:{color:'#fff',font:{size:9}}}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+getF(c.parsed.y,m4)}}}}});
         
         const mo = new Date().getMonth();
         if(m4==='expense') {
             document.getElementById('cards-4').innerHTML = `<div class="stat-card"><span class="stat-name">経費残額</span><div class="triple-grid"><div class="data-item"><span class="data-label">中園B</span><span class="data-value sub">${getF(d.nakazonoB[mo],'expense')}</span></div><div class="data-item"><span class="data-label">椹木B</span><span class="data-value sub">${getF(d.sawaragiB[mo],'expense')}</span></div><div class="data-item"><span class="data-label">江川B</span><span class="data-value sub">${getF(d.egawaB[mo],'expense')}</span></div></div></div>`;
         } else {
             const v = d[m4][mo]; const t = f.t ? d[f.t][mo] : 0;
-            const hasSet = !!f.t;
             document.getElementById('cards-4').innerHTML = `<div class="stat-card">
-                ${hasSet ? `<div class="comparison-grid"><div class="data-item"><span class="data-label">目標</span><span class="data-value sub">${getF(t,m4)}</span></div><div class="data-item"><span class="data-label">実績</span><span class="data-value">${getF(v,m4)}</span></div></div>` : `<div class="stat-row"><span class="stat-name">実績</span><span class="data-value">${getF(v,m4)}</span></div>`}
+                ${f.t ? `<div class="comparison-grid"><div class="data-item"><span class="data-label">目標</span><span class="data-value sub">${getF(t,m4)}</span></div><div class="data-item"><span class="data-label">実績</span><span class="data-value">${getF(v,m4)}</span></div></div>` : `<div class="stat-row"><span class="stat-name">実績</span><span class="data-value">${getF(v,m4)}</span></div>`}
             </div>`;
         }
     }
+    
     init();
 </script>
 </body>
