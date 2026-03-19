@@ -11,21 +11,34 @@
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
     <style>
-        /* CSS部分は変更なし */
         :root { --bg: #121212; --card: #1e1e1e; --gold: #d4af37; --white: #ffffff; --gray: #2a2a2a; }
         body { font-family: sans-serif; background: var(--bg); color: var(--white); margin: 0; overflow: hidden; }
-        header { height: 60px; background: var(--card); border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: center; position: relative; padding: 0 15px; }
+        header { height: 60px; background: var(--card); border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: center; position: relative; padding: 0 15px; flex-shrink: 0; }
         .header-logo { position: absolute; left: 15px; width: 100px; height: 40px; object-fit: contain; }
         .header-title { color: var(--gold); font-weight: bold; letter-spacing: 1px; font-size: 0.85rem; text-transform: uppercase; }
-        .container { width: 94%; max-width: 500px; margin: 10px auto; padding-bottom: 80px; }
+        
         .swiper { width: 100%; height: 100vh; }
-        .swiper-slide { height: 100%; overflow-y: auto; }
-        .year-selector { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; }
+        .swiper-slide { height: 100%; overflow-y: auto; display: flex; flex-direction: column; }
+        
+        .container { width: 94%; max-width: 500px; margin: 10px auto; padding-bottom: 100px; flex-grow: 1; }
+        
+        /* スワイプを邪魔しないよう修正 */
+        .metric-selector { 
+            display: flex; 
+            overflow-x: auto; 
+            gap: 8px; 
+            padding-bottom: 12px; 
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x; 
+        }
+        .metric-btn { white-space: nowrap; padding: 10px 18px; border-radius: 10px; background: var(--gray); border: 1px solid #444; color: #aaa; font-size: 0.8rem; cursor: pointer; flex-shrink: 0; }
+        .metric-btn.active { background: var(--gold); color: #000; font-weight: bold; }
+
+        .year-selector { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
         .year-btn { padding: 6px 15px; border-radius: 20px; background: var(--gray); border: 1px solid #444; color: #aaa; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
         .year-btn.active { background: #444; color: var(--gold); border-color: var(--gold); }
-        .metric-selector { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 12px; scrollbar-width: none; }
-        .metric-btn { white-space: nowrap; padding: 10px 18px; border-radius: 10px; background: var(--gray); border: 1px solid #444; color: #aaa; font-size: 0.8rem; cursor: pointer; }
-        .metric-btn.active { background: var(--gold); color: #000; font-weight: bold; }
+        
         .select-box { background: var(--card); border: 1px solid #444; padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 0.85rem; margin-bottom: 10px; }
         .dropdown { display: none; background: var(--card); border: 1px solid #444; border-radius: 10px; padding: 5px; max-height: 400px; overflow-y: auto; position: absolute; width: 90%; max-width: 470px; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         .store-header { background: rgba(212, 175, 55, 0.1); padding: 10px; color: var(--gold); font-weight: bold; font-size: 0.85rem; display: flex; align-items: center; gap: 10px; }
@@ -37,9 +50,8 @@
         .data-label { font-size: 0.6rem; color: #aaa; margin-bottom: 2px; }
         .data-value { font-size: 1.1rem; color: var(--gold); font-weight: bold; }
         .data-value.sub { color: #eee; font-size: 0.9rem; }
-        #loading { text-align: center; margin-top: 80px; color: var(--gold); position: absolute; width: 100%; z-index: 9999; }
+        #loading { text-align: center; margin-top: 80px; color: var(--gold); position: absolute; width: 100%; z-index: 9999; height: 100%; background: var(--bg); }
         input[type="checkbox"] { transform: scale(1.3); accent-color: var(--gold); }
-        label { cursor: pointer; flex-grow: 1; }
     </style>
 </head>
 <body>
@@ -47,7 +59,7 @@
 <div id="loading"><i class="fas fa-circle-notch fa-spin fa-2x"></i><p id="loading-text">Initializing LIFF...</p></div>
 
 <div class="swiper">
-    <div class="swiper-wrapper">
+    <div class="swiper-wrapper" id="main-wrapper">
         <div class="swiper-slide" id="slide-1">
             <header><img src="logo.png" class="header-logo"><div class="header-title">Staff DashBoards</div></header>
             <div class="container">
@@ -82,7 +94,7 @@
                 <div class="select-box" onclick="toggleD('drop-2')"><span id="label-2">店舗を選択</span><i class="fas fa-store"></i></div>
                 <div id="drop-2" class="dropdown"></div>
                 <div class="chart-card"><canvas id="chart-2"></canvas></div>
-                <div class="stats-container"><div id="cards-2"></div></div>
+                <div class="stats-container" id="cards-2"></div>
             </div>
         </div>
 
@@ -106,7 +118,7 @@
                 <div class="select-box" onclick="toggleD('drop-3')"><span id="label-3">店舗を選択</span><i class="fas fa-chart-line"></i></div>
                 <div id="drop-3" class="dropdown"></div>
                 <div class="chart-card"><canvas id="chart-3"></canvas></div>
-                <div class="stats-container"><div id="cards-3"></div></div>
+                <div class="stats-container" id="cards-3"></div>
             </div>
         </div>
 
@@ -126,7 +138,7 @@
                     <button class="metric-btn" onclick="changeM4('expense',this)">経費残額</button>
                 </div>
                 <div class="chart-card"><canvas id="chart-4"></canvas></div>
-                <div class="stats-container"><div id="cards-4"></div></div>
+                <div class="stats-container" id="cards-4"></div>
             </div>
         </div>
     </div>
@@ -138,7 +150,7 @@
     const LIFF_ID = "2009530502-irIiJIX4"; 
     const COLORS = ['rgba(212,175,55','rgba(52,152,219','rgba(231,76,60','rgba(46,204,113','rgba(155,89,182','rgba(241,196,15','rgba(26,188,156','rgba(230,126,34'];
 
-    let allData = null, c1=null, c2=null, c3=null, c4=null;
+    let allData = null, c1=null, c2=null, c3=null, c4=null, swiperInstance = null;
     let sK=[], sY=[], sS=[], sA=[], m1='sales', m2='totalRate', m3='storeSales', m4='totalSales';
     
     const formats = {
@@ -151,36 +163,36 @@
         fcf:{u:'￥',s:'',d:0,t:'fcfTarget'}, balance:{u:'￥',s:'',d:0,t:'balanceTarget'}, expense:{u:'￥',s:'',d:0}
     };
 
-    // 起動処理をLIFF用に書き換え
     window.onload = function() {
         liff.init({ liffId: LIFF_ID })
             .then(() => {
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                } else {
-                    liff.getProfile().then(profile => {
-                        init(profile.userId);
-                    });
-                }
+                if (!liff.isLoggedIn()) { liff.login(); } 
+                else { liff.getProfile().then(p => init(p.userId)); }
             })
-            .catch(err => {
-                document.getElementById('loading-text').innerText = "LIFF Init Error: " + err;
-            });
+            .catch(err => { document.getElementById('loading-text').innerText = "LIFF Init Error: " + err; });
     };
 
     async function init(userId) {
         try {
-            document.getElementById('loading-text').innerText = "Loading Dashboard Data...";
+            document.getElementById('loading-text').innerText = "Fetching Data...";
             const res = await fetch(`${GAS_URL}?userId=${userId}`);
             allData = await res.json();
             
             if (allData.status === 'success') {
                 const level = allData.myInfo.level;
-                if (level < 4) document.getElementById('slide-4').remove();
-                if (level < 3) document.getElementById('slide-3').remove();
-                if (level < 2) document.getElementById('slide-2').remove();
+                // 権限のないスライドを物理的に削除
+                if (level < 4) { const s4 = document.getElementById('slide-4'); if(s4) s4.remove(); }
+                if (level < 3) { const s3 = document.getElementById('slide-3'); if(s3) s3.remove(); }
+                if (level < 2) { const s2 = document.getElementById('slide-2'); if(s2) s2.remove(); }
 
-                new Swiper('.swiper', { pagination: { el: '.swiper-pagination' } });
+                // 削除が完了してからSwiperを初期化
+                swiperInstance = new Swiper('.swiper', { 
+                    pagination: { el: '.swiper-pagination', clickable: true },
+                    edgeSwipeDetection: true,
+                    touchStartPreventDefault: false, // ボタン操作を妨げない設定
+                    shortSwipes: true,
+                    threshold: 5
+                });
 
                 sY = [allData.yearList[0]];
                 const myStore = allData.staffList.find(s => s.name === allData.myInfo.userName)?.store || allData.storeList[0];
@@ -189,21 +201,22 @@
 
                 renderYears(); renderDrops();
                 if(level>=1) updateM1(); if(level>=2) updateM2(); if(level>=3) updateM3(); if(level>=4) updateM4();
+                
                 document.getElementById('loading').style.display = 'none';
             } else {
-                document.getElementById('loading-text').innerText = "Error: " + allData.message;
+                document.getElementById('loading-text').innerText = "Access Denied: " + allData.message;
             }
-        } catch (e) { 
-            document.getElementById('loading-text').innerText = "Fetch Error: " + e;
-        }
+        } catch (e) { document.getElementById('loading-text').innerText = "Fetch Error: " + e; }
     }
 
-    // --- 以降の関数群は変更なし ---
+    // --- 単位整形 ---
     function getF(v, m) {
         const f = formats[m] || {u:'',s:'',d:0};
         let dv = Number(v); if (f.s === '％') dv *= 100;
         return f.u + dv.toLocaleString(undefined,{minimumFractionDigits:f.d, maximumFractionDigits:f.d}) + f.s;
     }
+
+    // --- 年度切り替え ---
     function renderYears() {
         const h = allData.yearList.map(y => `<button class="year-btn ${sY.includes(y)?'active':''}" onclick="toggleY('${y}')">${y}年</button>`).join('');
         ['1','2','3','4'].forEach(i => { if(document.getElementById('year-'+i)) document.getElementById('year-'+i).innerHTML = h; });
@@ -214,6 +227,8 @@
         const lv = allData.myInfo.level;
         if(lv>=1) updateM1(); if(lv>=2) updateM2(); if(lv>=3) updateM3(); if(lv>=4) updateM4();
     }
+
+    // --- ドロップダウン操作 ---
     function toggleD(id) { const el=document.getElementById(id); el.style.display=el.style.display==='block'?'none':'block'; }
     function renderDrops() {
         let h1 = ""; allData.storeList.forEach(st => {
@@ -236,11 +251,14 @@
         if(document.getElementById('label-2')) document.getElementById('label-2').innerText = sS.length + "店舗を選択中";
         if(document.getElementById('label-3')) document.getElementById('label-3').innerText = sA.length + "店舗を選択中";
     }
-    function changeM1(m,b) { document.querySelectorAll('#year-1 + .metric-selector .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m1=m; updateM1(); }
-    function changeM2(m,b) { document.querySelectorAll('#year-2 + .metric-selector .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m2=m; updateM2(); }
-    function changeM3(m,b) { document.querySelectorAll('#year-3 + .metric-selector .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m3=m; updateM3(); }
-    function changeM4(m,b) { document.querySelectorAll('#year-4 + .metric-selector .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m4=m; updateM4(); }
 
+    // --- 指標切り替え ---
+    function changeM1(m,b) { document.querySelectorAll('#slide-1 .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m1=m; updateM1(); }
+    function changeM2(m,b) { document.querySelectorAll('#slide-2 .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m2=m; updateM2(); }
+    function changeM3(m,b) { document.querySelectorAll('#slide-3 .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m3=m; updateM3(); }
+    function changeM4(m,b) { document.querySelectorAll('#slide-4 .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m4=m; updateM4(); }
+
+    // --- 各画面描画 ---
     function updateM1() {
         const ctx = document.getElementById('chart-1').getContext('2d'); if(c1) c1.destroy();
         const ds = []; sK.forEach((key, i) => {
@@ -260,6 +278,7 @@
             return `<div class="stat-card" style="border-left-color:${c}"><div class="stat-row"><span class="stat-name">${n}</span><span class="data-value">${getF(v,m1)}</span></div></div>`;
         }).join('');
     }
+
     function updateM2() {
         const ctx = document.getElementById('chart-2').getContext('2d'); if(c2) c2.destroy();
         const ds = []; sS.forEach((key, i) => {
@@ -273,6 +292,7 @@
         const yr = sY[0]; const mo = new Date().getMonth();
         document.getElementById('cards-2').innerHTML = sS.map((st,i) => `<div class="stat-card" style="border-left-color:rgba(${COLORS[i % COLORS.length]},1)"><div class="stat-row"><span class="stat-name">${st}</span><span class="data-value">${getF(allData.materialData[yr]?.[st]?.[m2]?.[mo]||0,m2)}</span></div></div>`).join('');
     }
+
     function updateM3() {
         const ctx = document.getElementById('chart-3').getContext('2d'); if(c3) c3.destroy();
         const ds = []; sA.forEach((key, i) => {
@@ -292,6 +312,7 @@
             return `<div class="stat-card" style="border-left-color:${c}"><div class="stat-row"><span class="stat-name">${st}</span><span class="data-value">${getF(v,m3)}</span></div></div>`;
         }).join('');
     }
+
     function updateM4() {
         const ctx = document.getElementById('chart-4').getContext('2d'); if(c4) c4.destroy();
         const ds = []; const yr = sY[0]; const d = allData.companyData[yr]; const f = formats[m4];
