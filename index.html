@@ -14,9 +14,8 @@
         :root { --bg: #121212; --card: #1e1e1e; --gold: #d4af37; --white: #ffffff; --gray: #2a2a2a; }
         body { font-family: sans-serif; background: var(--bg); color: var(--white); margin: 0; overflow: hidden; width: 100vw; height: 100vh; }
         
-        /* ヘッダー修正：ロゴサイズに合わせて高さを調整 */
         header { 
-            height: 60px; /* 60pxから100pxに拡大 */
+            height: 60px; 
             background: var(--card); 
             border-bottom: 1px solid #333; 
             display: flex; 
@@ -29,7 +28,7 @@
 
         .header-logo { 
             position: absolute; 
-            left: -40px; 
+            left: -40px; /* ここでお好みの左寄せ具合を調整 */
             top: 50%; 
             transform: translateY(-50%); 
             width: 300px; 
@@ -46,7 +45,7 @@
             transform: translateY(-50%);
             color: var(--gold); 
             font-weight: bold; 
-            font-size: 0.75rem; /* 重なりを考慮し少し小さめ */
+            font-size: 0.75rem; 
             text-transform: uppercase; 
             z-index: 10; 
             text-shadow: 1px 1px 3px rgba(0,0,0,0.8); 
@@ -59,7 +58,16 @@
         .swiper-slide { width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .container { width: 94%; max-width: 500px; margin: 10px auto; padding-bottom: 120px; }
         
-        .metric-selector { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; touch-action: pan-x; }
+        /* ボタンエリアの横スクロール設定 */
+        .metric-selector { 
+            display: flex; 
+            overflow-x: auto; 
+            gap: 8px; 
+            padding-bottom: 12px; 
+            scrollbar-width: none; 
+            -webkit-overflow-scrolling: touch; 
+            touch-action: pan-x; 
+        }
         .metric-btn { white-space: nowrap; padding: 10px 18px; border-radius: 10px; background: var(--gray); border: 1px solid #444; color: #aaa; font-size: 0.8rem; cursor: pointer; flex-shrink: 0; }
         .metric-btn.active { background: var(--gold); color: #000; font-weight: bold; }
 
@@ -106,7 +114,6 @@
                 <div class="stats-container"><div class="stats-title" id="title-1">実績</div><div id="cards-1"></div></div>
             </div>
         </div>
-
         <div class="swiper-slide" id="slide-2">
             <header><img src="logo.png" class="header-logo"><div class="header-title">Material DashBoards</div></header>
             <div class="container">
@@ -125,7 +132,6 @@
                 <div class="stats-container" id="cards-2"></div>
             </div>
         </div>
-
         <div class="swiper-slide" id="slide-3">
             <header><img src="logo.png" class="header-logo"><div class="header-title">Core members DashBoards</div></header>
             <div class="container">
@@ -149,7 +155,6 @@
                 <div class="stats-container" id="cards-3"></div>
             </div>
         </div>
-
         <div class="swiper-slide" id="slide-4">
             <header><img src="logo.png" class="header-logo"><div class="header-title">Representative DashBoards</div></header>
             <div class="container">
@@ -210,33 +215,34 @@
                 const level = allData.myInfo.level;
                 const uName = allData.myInfo.userName;
 
-                // スライド制限
                 if (level < 4) { const s = document.getElementById('slide-4'); if(s) s.remove(); }
                 if (level < 3) { const s = document.getElementById('slide-3'); if(s) s.remove(); }
                 if (level < 2) { const s = document.getElementById('slide-2'); if(s) s.remove(); }
 
+                // Swiper初期化（ケンカ防止設定付き）
                 swiperInstance = new Swiper('.swiper', { 
                     pagination: { el: '.swiper-pagination', clickable: true },
-                    observer: true, observeParents: true, threshold: 15, resistanceRatio: 0, touchStartPreventDefault: false
+                    observer: true, 
+                    observeParents: true, 
+                    threshold: 15, 
+                    resistanceRatio: 0, 
+                    touchStartPreventDefault: false,
+                    // ボタンエリアを触っている時はスワイプさせない
+                    noSwiping: true,
+                    noSwipingClass: 'metric-selector' 
                 });
 
-                // 初期選択設定
                 sY = [allData.yearList[0]];
                 const myInfo = allData.staffList.find(s => s.name.replace(/\s+/g, "") === uName);
                 const myStore = myInfo ? myInfo.store : allData.storeList[0];
                 sK = [allData.staffList.find(s => s.name.replace(/\s+/g, "") === uName)?.name].filter(Boolean);
                 if(sK.length === 0) sK = [allData.staffList[0].name];
-                sS = [myStore]; 
-                sA = [myStore];
+                sS = [myStore]; sA = [myStore];
 
-                renderYears(); 
-                renderDrops();
-
-                // 高速化：1枚目を描いて即表示
+                renderYears(); renderDrops();
                 await updateM1(); 
                 document.getElementById('loading').style.display = 'none';
 
-                // 背景で残りを描画
                 setTimeout(() => {
                     if(level>=2) updateM2();
                     if(level>=3) updateM3();
@@ -246,8 +252,6 @@
         } catch (e) { document.getElementById('loading-text').innerText = "Fetch Error: " + e; }
     }
 
-    // 各関数 (getF, renderYears, toggleY, toggleD, renderDrops, tSStore, hSChange, hMChange, hAChange, updateLabels, changeM1...M4, updateM1...M4)
-    // 提示されたロジックをそのまま継承
     function getF(v, m) { const f = formats[m] || {u:'',s:'',d:0}; let dv = Number(v); if (f.s === '％') dv *= 100; return f.u + dv.toLocaleString(undefined,{minimumFractionDigits:f.d, maximumFractionDigits:f.d}) + f.s; }
     function renderYears() { const h = allData.yearList.map(y => `<button class="year-btn ${sY.includes(y)?'active':''}" onclick="toggleY('${y}')">${y}年</button>`).join(''); ['1','2','3','4'].forEach(i => { if(document.getElementById('year-'+i)) document.getElementById('year-'+i).innerHTML = h; }); }
     async function toggleY(y) { if (sY.includes(y)) { if(sY.length>1) sY = sY.filter(x=>x!==y); } else { sY.push(y); } sY.sort().reverse(); renderYears(); const lv = allData.myInfo.level; const tasks = []; if(lv>=1) tasks.push(updateM1()); if(lv>=2) tasks.push(updateM2()); if(lv>=3) tasks.push(updateM3()); if(lv>=4) tasks.push(updateM4()); await Promise.all(tasks); }
