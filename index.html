@@ -15,11 +15,9 @@
         header { padding: 15px; background: var(--card); border-bottom: 1px solid #333; text-align: center; color: var(--gold); font-weight: bold; letter-spacing: 2px; }
         .container { width: 94%; max-width: 500px; margin: 10px auto; padding-bottom: 60px; }
         
-        /* スワイプ設定 */
         .swiper { width: 100%; height: 100vh; }
         .swiper-slide { height: 100%; overflow-y: auto; }
 
-        /* 共通パーツ */
         .year-selector { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; }
         .year-btn { padding: 6px 15px; border-radius: 20px; background: var(--gray); border: 1px solid #444; color: #aaa; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
         .year-btn.active { background: #444; color: var(--gold); border-color: var(--gold); }
@@ -36,7 +34,6 @@
         
         .chart-card { background: var(--card); border-radius: 15px; padding: 10px; border: 1px solid rgba(212, 175, 55, 0.2); height: 320px; margin-top: 10px; }
 
-        /* カード */
         .stats-container { margin-top: 25px; }
         .stats-title { font-size: 0.8rem; color: var(--gold); margin-bottom: 12px; font-weight: bold; letter-spacing: 1px; }
         .stat-card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 10px; border-left: 4px solid var(--gold); box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
@@ -52,7 +49,6 @@
         input[type="checkbox"] { transform: scale(1.3); accent-color: var(--gold); }
         label { cursor: pointer; flex-grow: 1; }
         
-        /* ページポインター */
         .swiper-pagination-bullet { background: #555; opacity: 1; }
         .swiper-pagination-bullet-active { background: var(--gold); }
     </style>
@@ -120,10 +116,18 @@
     let allData = null, salesChart = null, matChart = null;
     let selectedKeys = [], selectedYears = [], selectedStores = [], currentMetric = 'sales', currentMatMetric = 'totalRate';
     
+    // フォーマットルール
     const formats = {
-        sales: { u: '￥', s: '', d: 0 }, shimeiSales: { u: '￥', s: '', d: 0 }, timePrice: { u: '￥', s: '', d: 0 },
-        shimeiCount: { u: '', s: '名', d: 0 }, nextReserve: { u: '', s: '％', d: 2 }, newRepeat: { u: '', s: '％', d: 2 },
-        forecast: { u: '￥', s: '', d: 0 }, totalRate: { u: '', s: '％', d: 2 }, techRate: { u: '', s: '％', d: 2 }
+        sales: { u: '￥', s: '', d: 0 },
+        shimeiSales: { u: '￥', s: '', d: 0 },
+        timePrice: { u: '￥', s: '', d: 0 },
+        shimeiCount: { u: '', s: '名', d: 0 },
+        newCount: { u: '', s: '名', d: 0 },
+        nextReserve: { u: '', s: '％', d: 2 },
+        newRepeat: { u: '', s: '％', d: 2 },
+        forecast: { u: '￥', s: '', d: 0 },
+        totalRate: { u: '', s: '％', d: 2 },
+        techRate: { u: '', s: '％', d: 2 }
     };
 
     const swiper = new Swiper('.swiper', { pagination: { el: '.swiper-pagination' }, edgeSwipeDetection: true });
@@ -143,10 +147,14 @@
                 renderMatDropdown(myStore);
                 updateSalesDisplay();
                 updateMatDisplay();
-                
                 document.getElementById('loading').style.display = 'none';
             }
         } catch (e) { console.error(e); }
+    }
+
+    function getFormatted(val, metric) {
+        const f = formats[metric] || { u: '', s: '', d: 0 };
+        return f.u + Number(val).toLocaleString(undefined, {minimumFractionDigits: f.d, maximumFractionDigits: f.d}) + f.s;
     }
 
     function renderYearSelectors() {
@@ -199,13 +207,8 @@
     function updateSalesLabel() { document.getElementById('sales-label').innerText = selectedKeys.length + "名を選択中"; }
     function updateMatLabel() { document.getElementById('mat-label').innerText = selectedStores.length + "店舗を選択中"; }
 
-    function changeMetric(m, btn) { document.querySelectorAll('.metric-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentMetric = m; updateSalesDisplay(); }
-    function changeMatMetric(m, btn) { document.querySelectorAll('.metric-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentMatMetric = m; updateMatDisplay(); }
-
-    function getFormatted(val, metric) {
-        const f = formats[metric];
-        return f.u + Number(val).toLocaleString(undefined, {minimumFractionDigits: f.d, maximumFractionDigits: f.d}) + (f.s || '');
-    }
+    function changeMetric(m, btn) { document.querySelectorAll('#year-selector-1 + .metric-selector .metric-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentMetric = m; updateSalesDisplay(); }
+    function changeMatMetric(m, btn) { document.querySelectorAll('#year-selector-2 + .metric-selector .metric-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentMatMetric = m; updateMatDisplay(); }
 
     function updateSalesDisplay() { updateSalesChart(); updateSalesCards(); }
     function updateMatDisplay() { updateMatChart(); updateMatCards(); }
@@ -240,10 +243,10 @@
             const base = BASE_COLORS[i % BASE_COLORS.length];
             selectedYears.forEach((year, yIdx) => {
                 const color = `${base}, ${Math.max(1-(yIdx*0.4), 0.2)})`;
-                datasets.push({ label: `${name}(${year})`, data: allData.chartData[year]?.[name]?.[currentMetric] || new Array(12).fill(0), borderColor: color, backgroundColor: color, borderWidth: yIdx===0?3:1.5, pointRadius: yIdx===0?4:2, pointHitRadius: 30, tension: 0.3 });
+                datasets.push({ label: `${name}(${year})`, data: allData.chartData[year]?.[name]?.[currentMetric] || new Array(12).fill(0), borderColor: color, backgroundColor: color, borderWidth: yIdx===0?3:1.5, pointRadius: yIdx===0?4:2, pointHitRadius: 30, tension: 0.3, fill: false });
             });
         });
-        salesChart = new Chart(ctx, { type: 'line', data: { labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => getFormatted(v, currentMetric), color: '#aaa', font: { size: 9 } } } }, plugins: { legend: { display: false } } } });
+        salesChart = new Chart(ctx, { type: 'line', data: { labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => getFormatted(v, currentMetric), color: '#aaa', font: { size: 9 } } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.dataset.label + ': ' + getFormatted(c.parsed.y, currentMetric) } } } } });
     }
 
     function updateMatChart() {
@@ -254,10 +257,10 @@
             const base = BASE_COLORS[i % BASE_COLORS.length];
             selectedYears.forEach((year, yIdx) => {
                 const color = `${base}, ${Math.max(1-(yIdx*0.4), 0.2)})`;
-                datasets.push({ label: `${store}(${year})`, data: allData.materialData[year]?.[store]?.[currentMatMetric] || new Array(12).fill(0), borderColor: color, backgroundColor: color, borderWidth: yIdx===0?3:1.5, pointRadius: yIdx===0?4:2, pointHitRadius: 30, tension: 0.3 });
+                datasets.push({ label: `${store}(${year})`, data: allData.materialData[year]?.[store]?.[currentMatMetric] || new Array(12).fill(0), borderColor: color, backgroundColor: color, borderWidth: yIdx===0?3:1.5, pointRadius: yIdx===0?4:2, pointHitRadius: 30, tension: 0.3, fill: false });
             });
         });
-        matChart = new Chart(ctx, { type: 'line', data: { labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => getFormatted(v, currentMatMetric), color: '#aaa', font: { size: 9 } } } }, plugins: { legend: { display: false } } } });
+        matChart = new Chart(ctx, { type: 'line', data: { labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => getFormatted(v, currentMatMetric), color: '#aaa', font: { size: 9 } } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.dataset.label + ': ' + getFormatted(c.parsed.y, currentMatMetric) } } } } });
     }
 
     init();
