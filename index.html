@@ -13,26 +13,34 @@
     <style>
         :root { --bg: #121212; --card: #1e1e1e; --gold: #d4af37; --white: #ffffff; --gray: #2a2a2a; }
         body { font-family: sans-serif; background: var(--bg); color: var(--white); margin: 0; overflow: hidden; width: 100vw; height: 100vh; }
-        header { height: 60px; background: var(--card); border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: center; position: relative; padding: 0 15px; flex-shrink: 0; z-index: 10; }
-        .header-logo { position: absolute; left: 15px; width: 100px; height: 40px; object-fit: contain; }
-        .header-title { color: var(--gold); font-weight: bold; letter-spacing: 1px; font-size: 0.85rem; text-transform: uppercase; }
         
-        /* Swiper構造の固定 */
+        /* ヘッダー修正：ロゴとタイトルが被らないレイアウト */
+        header { 
+            height: 60px; 
+            background: var(--card); 
+            border-bottom: 1px solid #333; 
+            display: flex; 
+            align-items: center; 
+            padding: 0 15px; 
+            flex-shrink: 0; 
+            z-index: 10; 
+        }
+        .header-logo { width: 100px; height: 40px; object-fit: contain; flex-shrink: 0; }
+        .header-title { 
+            color: var(--gold); 
+            font-weight: bold; 
+            letter-spacing: 0.5px; 
+            font-size: 0.8rem; 
+            text-transform: uppercase; 
+            margin-left: auto; /* 右側に寄せる */
+            text-align: right;
+        }
+        
         .swiper { width: 100%; height: 100%; }
         .swiper-slide { width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-        
         .container { width: 94%; max-width: 500px; margin: 10px auto; padding-bottom: 120px; }
         
-        /* 横スクロールするボタンエリア */
-        .metric-selector { 
-            display: flex; 
-            overflow-x: auto; 
-            gap: 8px; 
-            padding-bottom: 12px; 
-            scrollbar-width: none;
-            -webkit-overflow-scrolling: touch;
-            touch-action: pan-x; /* 横方向のスクロールを許可 */
-        }
+        .metric-selector { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; touch-action: pan-x; }
         .metric-btn { white-space: nowrap; padding: 10px 18px; border-radius: 10px; background: var(--gray); border: 1px solid #444; color: #aaa; font-size: 0.8rem; cursor: pointer; flex-shrink: 0; }
         .metric-btn.active { background: var(--gold); color: #000; font-weight: bold; }
 
@@ -57,7 +65,7 @@
 </head>
 <body>
 
-<div id="loading"><i class="fas fa-circle-notch fa-spin fa-2x"></i><p id="loading-text">Initializing...</p></div>
+<div id="loading"><i class="fas fa-circle-notch fa-spin fa-2x"></i><p id="loading-text">Authenticating...</p></div>
 
 <div class="swiper">
     <div class="swiper-wrapper" id="main-wrapper">
@@ -181,41 +189,48 @@
             
             if (allData.status === 'success') {
                 const level = allData.myInfo.level;
-                
-                // 1. まず権限のないスライドを消す
+                const uName = allData.myInfo.userName; // 名前（スペースなし）
+
+                // 1. 権限のないスライドを消す
                 if (level < 4) { const s = document.getElementById('slide-4'); if(s) s.remove(); }
                 if (level < 3) { const s = document.getElementById('slide-3'); if(s) s.remove(); }
                 if (level < 2) { const s = document.getElementById('slide-2'); if(s) s.remove(); }
 
-                // 2. スライド確定後にSwiperを初期化
+                // 2. Swiper初期化
                 swiperInstance = new Swiper('.swiper', { 
                     pagination: { el: '.swiper-pagination', clickable: true },
-                    edgeSwipeDetection: true,
-                    touchStartPreventDefault: false, 
-                    observer: true,           // 中身の変化を監視
-                    observeParents: true,
-                    shortSwipes: true,
-                    threshold: 15,            // 誤作動防止のしきい値
-                    resistanceRatio: 0        // 端での跳ね返りを抑制
+                    observer: true, observeParents: true, threshold: 15, resistanceRatio: 0, touchStartPreventDefault: false
                 });
 
-                // 3. データ初期化
+                // 3. デフォルト選択の絞り込み（自分・自店舗のみ）
                 sY = [allData.yearList[0]];
-                const myStore = allData.staffList.find(s => s.name === allData.myInfo.userName)?.store || allData.storeList[0];
-                sK = allData.staffList.filter(s => s.store === myStore).map(s => s.name);
-                sS = [myStore]; sA = [myStore];
+                const myInfo = allData.staffList.find(s => s.name.replace(/\s+/g, "") === uName);
+                const myStore = myInfo ? myInfo.store : allData.storeList[0];
+                
+                sK = [allData.staffList.find(s => s.name.replace(/\s+/g, "") === uName)?.name].filter(Boolean);
+                if(sK.length === 0) sK = [allData.staffList[0].name]; // 万が一自分が見つからない場合
 
-                renderYears(); renderDrops();
-                if(level>=1) updateM1(); if(level>=2) updateM2(); if(level>=3) updateM3(); if(level>=4) updateM4();
+                sS = [myStore]; 
+                sA = [myStore];
+
+                // 4. 描画コンポーネントの構築
+                renderYears(); 
+                renderDrops();
+
+                // 5. 高速化：Promise.allで並列描画
+                const drawTasks = [];
+                if(level>=1) drawTasks.push(updateM1());
+                if(level>=2) drawTasks.push(updateM2());
+                if(level>=3) drawTasks.push(updateM3());
+                if(level>=4) drawTasks.push(updateM4());
+                
+                await Promise.all(drawTasks);
                 
                 document.getElementById('loading').style.display = 'none';
-            } else {
-                document.getElementById('loading-text').innerText = "Access Denied: " + allData.message;
             }
         } catch (e) { document.getElementById('loading-text').innerText = "Fetch Error: " + e; }
     }
 
-    // --- 以降の関数は前回のものを踏襲 (一部簡略化せずにベタ書き維持) ---
     function getF(v, m) {
         const f = formats[m] || {u:'',s:'',d:0};
         let dv = Number(v); if (f.s === '％') dv *= 100;
@@ -225,16 +240,18 @@
         const h = allData.yearList.map(y => `<button class="year-btn ${sY.includes(y)?'active':''}" onclick="toggleY('${y}')">${y}年</button>`).join('');
         ['1','2','3','4'].forEach(i => { if(document.getElementById('year-'+i)) document.getElementById('year-'+i).innerHTML = h; });
     }
-    function toggleY(y) {
+    async function toggleY(y) {
         if (sY.includes(y)) { if(sY.length>1) sY = sY.filter(x=>x!==y); } else { sY.push(y); }
         sY.sort().reverse(); renderYears();
         const lv = allData.myInfo.level;
-        if(lv>=1) updateM1(); if(lv>=2) updateM2(); if(lv>=3) updateM3(); if(lv>=4) updateM4();
+        const tasks = [];
+        if(lv>=1) tasks.push(updateM1()); if(lv>=2) tasks.push(updateM2()); if(lv>=3) tasks.push(updateM3()); if(lv>=4) tasks.push(updateM4());
+        await Promise.all(tasks);
     }
     function toggleD(id) { const el=document.getElementById(id); el.style.display=el.style.display==='block'?'none':'block'; }
     function renderDrops() {
         let h1 = ""; allData.storeList.forEach(st => {
-            h1 += `<div class="store-header"><input type="checkbox" id="ps-${st}" onchange="tSStore('${st}',this)"><label for="ps-${st}">${st} (全員)</label></div>`;
+            h1 += `<div class="store-header"><input type="checkbox" id="ps-${st}" onchange="tSStore('${st}',this)"><label for="ps-${st}">${st} (全員選ぶ)</label></div>`;
             allData.staffList.filter(s=>s.store===st).forEach(s=>{
                 h1 += `<div class="staff-option"><input type="checkbox" class="s-chk" data-store="${st}" value="${s.name}" ${sK.includes(s.name)?'checked':''} onchange="hSChange()"><label onclick="this.previousElementSibling.click()">${s.name}</label></div>`;
             });
@@ -258,7 +275,7 @@
     function changeM3(m,b) { document.querySelectorAll('#slide-3 .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m3=m; updateM3(); }
     function changeM4(m,b) { document.querySelectorAll('#slide-4 .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m4=m; updateM4(); }
 
-    function updateM1() {
+    async function updateM1() {
         const ctx = document.getElementById('chart-1').getContext('2d'); if(c1) c1.destroy();
         const ds = []; sK.forEach((key, i) => {
             const base = COLORS[i % COLORS.length];
@@ -277,7 +294,7 @@
             return `<div class="stat-card" style="border-left-color:${c}"><div class="stat-row"><span class="stat-name">${n}</span><span class="data-value">${getF(v,m1)}</span></div></div>`;
         }).join('');
     }
-    function updateM2() {
+    async function updateM2() {
         const ctx = document.getElementById('chart-2').getContext('2d'); if(c2) c2.destroy();
         const ds = []; sS.forEach((key, i) => {
             const base = COLORS[i % COLORS.length];
@@ -290,7 +307,7 @@
         const yr = sY[0]; const mo = new Date().getMonth();
         document.getElementById('cards-2').innerHTML = sS.map((st,i) => `<div class="stat-card" style="border-left-color:rgba(${COLORS[i % COLORS.length]},1)"><div class="stat-row"><span class="stat-name">${st}</span><span class="data-value">${getF(allData.materialData[yr]?.[st]?.[m2]?.[mo]||0,m2)}</span></div></div>`).join('');
     }
-    function updateM3() {
+    async function updateM3() {
         const ctx = document.getElementById('chart-3').getContext('2d'); if(c3) c3.destroy();
         const ds = []; sA.forEach((key, i) => {
             const base = COLORS[i % COLORS.length];
@@ -309,7 +326,7 @@
             return `<div class="stat-card" style="border-left-color:${c}"><div class="stat-row"><span class="stat-name">${st}</span><span class="data-value">${getF(v,m3)}</span></div></div>`;
         }).join('');
     }
-    function updateM4() {
+    async function updateM4() {
         const ctx = document.getElementById('chart-4').getContext('2d'); if(c4) c4.destroy();
         const ds = []; const yr = sY[0]; const d = allData.companyData[yr]; const f = formats[m4];
         if(m4==='expense') {
