@@ -12,17 +12,18 @@
 
     <style>
         :root { --bg: #121212; --card: #1e1e1e; --gold: #d4af37; --white: #ffffff; --gray: #2a2a2a; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--white); margin: 0; overflow: hidden; }
-        header { height: 60px; background: var(--card); border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: center; position: relative; padding: 0 15px; flex-shrink: 0; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--white); margin: 0; overflow: hidden; width: 100vw; height: 100vh; }
+        header { height: 60px; background: var(--card); border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: center; position: relative; padding: 0 15px; flex-shrink: 0; z-index: 10; }
         .header-logo { position: absolute; left: 15px; width: 100px; height: 40px; object-fit: contain; }
         .header-title { color: var(--gold); font-weight: bold; letter-spacing: 1px; font-size: 0.85rem; text-transform: uppercase; }
         
-        .swiper { width: 100%; height: 100vh; }
-        .swiper-slide { height: 100%; overflow-y: auto; display: flex; flex-direction: column; }
+        /* Swiper構造の固定 */
+        .swiper { width: 100%; height: 100%; }
+        .swiper-slide { width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         
-        .container { width: 94%; max-width: 500px; margin: 10px auto; padding-bottom: 100px; flex-grow: 1; }
+        .container { width: 94%; max-width: 500px; margin: 10px auto; padding-bottom: 120px; }
         
-        /* スワイプを邪魔しないよう修正 */
+        /* 横スクロールするボタンエリア */
         .metric-selector { 
             display: flex; 
             overflow-x: auto; 
@@ -30,12 +31,12 @@
             padding-bottom: 12px; 
             scrollbar-width: none;
             -webkit-overflow-scrolling: touch;
-            touch-action: pan-x; 
+            touch-action: pan-x; /* 横方向のスクロールを許可 */
         }
         .metric-btn { white-space: nowrap; padding: 10px 18px; border-radius: 10px; background: var(--gray); border: 1px solid #444; color: #aaa; font-size: 0.8rem; cursor: pointer; flex-shrink: 0; }
         .metric-btn.active { background: var(--gold); color: #000; font-weight: bold; }
 
-        .year-selector { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+        .year-selector { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; touch-action: pan-x; }
         .year-btn { padding: 6px 15px; border-radius: 20px; background: var(--gray); border: 1px solid #444; color: #aaa; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
         .year-btn.active { background: #444; color: var(--gold); border-color: var(--gold); }
         
@@ -50,13 +51,13 @@
         .data-label { font-size: 0.6rem; color: #aaa; margin-bottom: 2px; }
         .data-value { font-size: 1.1rem; color: var(--gold); font-weight: bold; }
         .data-value.sub { color: #eee; font-size: 0.9rem; }
-        #loading { text-align: center; margin-top: 80px; color: var(--gold); position: absolute; width: 100%; z-index: 9999; height: 100%; background: var(--bg); }
+        #loading { text-align: center; padding-top: 100px; color: var(--gold); position: fixed; top:0; left:0; width: 100%; height:100%; z-index: 9999; background: var(--bg); }
         input[type="checkbox"] { transform: scale(1.3); accent-color: var(--gold); }
     </style>
 </head>
 <body>
 
-<div id="loading"><i class="fas fa-circle-notch fa-spin fa-2x"></i><p id="loading-text">Initializing LIFF...</p></div>
+<div id="loading"><i class="fas fa-circle-notch fa-spin fa-2x"></i><p id="loading-text">Initializing...</p></div>
 
 <div class="swiper">
     <div class="swiper-wrapper" id="main-wrapper">
@@ -180,20 +181,25 @@
             
             if (allData.status === 'success') {
                 const level = allData.myInfo.level;
-                // 権限のないスライドを物理的に削除
-                if (level < 4) { const s4 = document.getElementById('slide-4'); if(s4) s4.remove(); }
-                if (level < 3) { const s3 = document.getElementById('slide-3'); if(s3) s3.remove(); }
-                if (level < 2) { const s2 = document.getElementById('slide-2'); if(s2) s2.remove(); }
+                
+                // 1. まず権限のないスライドを消す
+                if (level < 4) { const s = document.getElementById('slide-4'); if(s) s.remove(); }
+                if (level < 3) { const s = document.getElementById('slide-3'); if(s) s.remove(); }
+                if (level < 2) { const s = document.getElementById('slide-2'); if(s) s.remove(); }
 
-                // 削除が完了してからSwiperを初期化
+                // 2. スライド確定後にSwiperを初期化
                 swiperInstance = new Swiper('.swiper', { 
                     pagination: { el: '.swiper-pagination', clickable: true },
                     edgeSwipeDetection: true,
-                    touchStartPreventDefault: false, // ボタン操作を妨げない設定
+                    touchStartPreventDefault: false, 
+                    observer: true,           // 中身の変化を監視
+                    observeParents: true,
                     shortSwipes: true,
-                    threshold: 5
+                    threshold: 15,            // 誤作動防止のしきい値
+                    resistanceRatio: 0        // 端での跳ね返りを抑制
                 });
 
+                // 3. データ初期化
                 sY = [allData.yearList[0]];
                 const myStore = allData.staffList.find(s => s.name === allData.myInfo.userName)?.store || allData.storeList[0];
                 sK = allData.staffList.filter(s => s.store === myStore).map(s => s.name);
@@ -209,14 +215,12 @@
         } catch (e) { document.getElementById('loading-text').innerText = "Fetch Error: " + e; }
     }
 
-    // --- 単位整形 ---
+    // --- 以降の関数は前回のものを踏襲 (一部簡略化せずにベタ書き維持) ---
     function getF(v, m) {
         const f = formats[m] || {u:'',s:'',d:0};
         let dv = Number(v); if (f.s === '％') dv *= 100;
         return f.u + dv.toLocaleString(undefined,{minimumFractionDigits:f.d, maximumFractionDigits:f.d}) + f.s;
     }
-
-    // --- 年度切り替え ---
     function renderYears() {
         const h = allData.yearList.map(y => `<button class="year-btn ${sY.includes(y)?'active':''}" onclick="toggleY('${y}')">${y}年</button>`).join('');
         ['1','2','3','4'].forEach(i => { if(document.getElementById('year-'+i)) document.getElementById('year-'+i).innerHTML = h; });
@@ -227,8 +231,6 @@
         const lv = allData.myInfo.level;
         if(lv>=1) updateM1(); if(lv>=2) updateM2(); if(lv>=3) updateM3(); if(lv>=4) updateM4();
     }
-
-    // --- ドロップダウン操作 ---
     function toggleD(id) { const el=document.getElementById(id); el.style.display=el.style.display==='block'?'none':'block'; }
     function renderDrops() {
         let h1 = ""; allData.storeList.forEach(st => {
@@ -251,14 +253,11 @@
         if(document.getElementById('label-2')) document.getElementById('label-2').innerText = sS.length + "店舗を選択中";
         if(document.getElementById('label-3')) document.getElementById('label-3').innerText = sA.length + "店舗を選択中";
     }
-
-    // --- 指標切り替え ---
     function changeM1(m,b) { document.querySelectorAll('#slide-1 .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m1=m; updateM1(); }
     function changeM2(m,b) { document.querySelectorAll('#slide-2 .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m2=m; updateM2(); }
     function changeM3(m,b) { document.querySelectorAll('#slide-3 .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m3=m; updateM3(); }
     function changeM4(m,b) { document.querySelectorAll('#slide-4 .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m4=m; updateM4(); }
 
-    // --- 各画面描画 ---
     function updateM1() {
         const ctx = document.getElementById('chart-1').getContext('2d'); if(c1) c1.destroy();
         const ds = []; sK.forEach((key, i) => {
@@ -278,7 +277,6 @@
             return `<div class="stat-card" style="border-left-color:${c}"><div class="stat-row"><span class="stat-name">${n}</span><span class="data-value">${getF(v,m1)}</span></div></div>`;
         }).join('');
     }
-
     function updateM2() {
         const ctx = document.getElementById('chart-2').getContext('2d'); if(c2) c2.destroy();
         const ds = []; sS.forEach((key, i) => {
@@ -292,7 +290,6 @@
         const yr = sY[0]; const mo = new Date().getMonth();
         document.getElementById('cards-2').innerHTML = sS.map((st,i) => `<div class="stat-card" style="border-left-color:rgba(${COLORS[i % COLORS.length]},1)"><div class="stat-row"><span class="stat-name">${st}</span><span class="data-value">${getF(allData.materialData[yr]?.[st]?.[m2]?.[mo]||0,m2)}</span></div></div>`).join('');
     }
-
     function updateM3() {
         const ctx = document.getElementById('chart-3').getContext('2d'); if(c3) c3.destroy();
         const ds = []; sA.forEach((key, i) => {
@@ -312,7 +309,6 @@
             return `<div class="stat-card" style="border-left-color:${c}"><div class="stat-row"><span class="stat-name">${st}</span><span class="data-value">${getF(v,m3)}</span></div></div>`;
         }).join('');
     }
-
     function updateM4() {
         const ctx = document.getElementById('chart-4').getContext('2d'); if(c4) c4.destroy();
         const ds = []; const yr = sY[0]; const d = allData.companyData[yr]; const f = formats[m4];
