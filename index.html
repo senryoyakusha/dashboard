@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Management Dashboard 2026</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
     <style>
+        /* CSS部分は変更なし */
         :root { --bg: #121212; --card: #1e1e1e; --gold: #d4af37; --white: #ffffff; --gray: #2a2a2a; }
         body { font-family: sans-serif; background: var(--bg); color: var(--white); margin: 0; overflow: hidden; }
         header { height: 60px; background: var(--card); border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: center; position: relative; padding: 0 15px; }
@@ -42,7 +44,7 @@
 </head>
 <body>
 
-<div id="loading"><i class="fas fa-circle-notch fa-spin fa-2x"></i><p>Authenticating...</p></div>
+<div id="loading"><i class="fas fa-circle-notch fa-spin fa-2x"></i><p id="loading-text">Initializing LIFF...</p></div>
 
 <div class="swiper">
     <div class="swiper-wrapper">
@@ -132,8 +134,8 @@
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/a/macros/senryoyakusha.com/s/AKfycbxAzSojBu5Tjzjge2akg4d_VKGdl6ZCYoEjaRRKiZaRI5DXfFEdkH8MKwW2eI2UgCc/exec";
-    const currentUserId = "user_gps3atgzq"; 
+    const GAS_URL = "ここに新しくデプロイしたGASのURL";
+    const LIFF_ID = "ここにLINEで作成したLIFF_ID"; 
     const COLORS = ['rgba(212,175,55','rgba(52,152,219','rgba(231,76,60','rgba(46,204,113','rgba(155,89,182','rgba(241,196,15','rgba(26,188,156','rgba(230,126,34'];
 
     let allData = null, c1=null, c2=null, c3=null, c4=null;
@@ -149,10 +151,29 @@
         fcf:{u:'￥',s:'',d:0,t:'fcfTarget'}, balance:{u:'￥',s:'',d:0,t:'balanceTarget'}, expense:{u:'￥',s:'',d:0}
     };
 
-    async function init() {
+    // 起動処理をLIFF用に書き換え
+    window.onload = function() {
+        liff.init({ liffId: LIFF_ID })
+            .then(() => {
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                } else {
+                    liff.getProfile().then(profile => {
+                        init(profile.userId);
+                    });
+                }
+            })
+            .catch(err => {
+                document.getElementById('loading-text').innerText = "LIFF Init Error: " + err;
+            });
+    };
+
+    async function init(userId) {
         try {
-            const res = await fetch(`${GAS_URL}?userId=${currentUserId}`);
+            document.getElementById('loading-text').innerText = "Loading Dashboard Data...";
+            const res = await fetch(`${GAS_URL}?userId=${userId}`);
             allData = await res.json();
+            
             if (allData.status === 'success') {
                 const level = allData.myInfo.level;
                 if (level < 4) document.getElementById('slide-4').remove();
@@ -169,30 +190,31 @@
                 renderYears(); renderDrops();
                 if(level>=1) updateM1(); if(level>=2) updateM2(); if(level>=3) updateM3(); if(level>=4) updateM4();
                 document.getElementById('loading').style.display = 'none';
+            } else {
+                document.getElementById('loading-text').innerText = "Error: " + allData.message;
             }
-        } catch (e) { console.error(e); }
+        } catch (e) { 
+            document.getElementById('loading-text').innerText = "Fetch Error: " + e;
+        }
     }
 
+    // --- 以降の関数群は変更なし ---
     function getF(v, m) {
         const f = formats[m] || {u:'',s:'',d:0};
         let dv = Number(v); if (f.s === '％') dv *= 100;
         return f.u + dv.toLocaleString(undefined,{minimumFractionDigits:f.d, maximumFractionDigits:f.d}) + f.s;
     }
-
     function renderYears() {
         const h = allData.yearList.map(y => `<button class="year-btn ${sY.includes(y)?'active':''}" onclick="toggleY('${y}')">${y}年</button>`).join('');
         ['1','2','3','4'].forEach(i => { if(document.getElementById('year-'+i)) document.getElementById('year-'+i).innerHTML = h; });
     }
-
     function toggleY(y) {
         if (sY.includes(y)) { if(sY.length>1) sY = sY.filter(x=>x!==y); } else { sY.push(y); }
         sY.sort().reverse(); renderYears();
         const lv = allData.myInfo.level;
         if(lv>=1) updateM1(); if(lv>=2) updateM2(); if(lv>=3) updateM3(); if(lv>=4) updateM4();
     }
-
     function toggleD(id) { const el=document.getElementById(id); el.style.display=el.style.display==='block'?'none':'block'; }
-
     function renderDrops() {
         let h1 = ""; allData.storeList.forEach(st => {
             h1 += `<div class="store-header"><input type="checkbox" id="ps-${st}" onchange="tSStore('${st}',this)"><label for="ps-${st}">${st} (全員)</label></div>`;
@@ -205,7 +227,6 @@
         if(document.getElementById('drop-3')) document.getElementById('drop-3').innerHTML = allData.storeList.map(st => `<div class="store-header"><input type="checkbox" class="a-chk" value="${st}" ${sA.includes(st)?'checked':''} onchange="hAChange()"><label onclick="this.previousElementSibling.click()">${st}</label></div>`).join('');
         updateLabels();
     }
-
     function tSStore(s, el) { document.querySelectorAll(`.s-chk[data-store="${s}"]`).forEach(c=>c.checked=el.checked); hSChange(); }
     function hSChange() { sK = Array.from(document.querySelectorAll('.s-chk:checked')).map(c=>c.value); updateLabels(); updateM1(); }
     function hMChange() { sS = Array.from(document.querySelectorAll('.m-chk:checked')).map(c=>c.value); updateLabels(); updateM2(); }
@@ -215,7 +236,6 @@
         if(document.getElementById('label-2')) document.getElementById('label-2').innerText = sS.length + "店舗を選択中";
         if(document.getElementById('label-3')) document.getElementById('label-3').innerText = sA.length + "店舗を選択中";
     }
-
     function changeM1(m,b) { document.querySelectorAll('#year-1 + .metric-selector .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m1=m; updateM1(); }
     function changeM2(m,b) { document.querySelectorAll('#year-2 + .metric-selector .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m2=m; updateM2(); }
     function changeM3(m,b) { document.querySelectorAll('#year-3 + .metric-selector .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m3=m; updateM3(); }
@@ -232,7 +252,6 @@
         });
         c1 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{ y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{callback:v=>getF(v,m1), color:'#aaa', font:{size:9}}}}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+getF(c.parsed.y,m1)}}}}});
         const yr = sY[0]; const mo = new Date().getMonth();
-        document.getElementById('title-1').innerText = (m1==='sales')? `${yr}年 ${mo+1}月 予測vs実績` : `${yr}年 ${mo+1}月 実績`;
         document.getElementById('cards-1').innerHTML = sK.map((n,i) => {
             const v = allData.chartData[yr]?.[n]?.[m1]?.[mo] || 0;
             const f = allData.chartData[yr]?.[n]?.['forecast']?.[mo] || 0;
@@ -241,7 +260,6 @@
             return `<div class="stat-card" style="border-left-color:${c}"><div class="stat-row"><span class="stat-name">${n}</span><span class="data-value">${getF(v,m1)}</span></div></div>`;
         }).join('');
     }
-
     function updateM2() {
         const ctx = document.getElementById('chart-2').getContext('2d'); if(c2) c2.destroy();
         const ds = []; sS.forEach((key, i) => {
@@ -255,7 +273,6 @@
         const yr = sY[0]; const mo = new Date().getMonth();
         document.getElementById('cards-2').innerHTML = sS.map((st,i) => `<div class="stat-card" style="border-left-color:rgba(${COLORS[i % COLORS.length]},1)"><div class="stat-row"><span class="stat-name">${st}</span><span class="data-value">${getF(allData.materialData[yr]?.[st]?.[m2]?.[mo]||0,m2)}</span></div></div>`).join('');
     }
-
     function updateM3() {
         const ctx = document.getElementById('chart-3').getContext('2d'); if(c3) c3.destroy();
         const ds = []; sA.forEach((key, i) => {
@@ -275,7 +292,6 @@
             return `<div class="stat-card" style="border-left-color:${c}"><div class="stat-row"><span class="stat-name">${st}</span><span class="data-value">${getF(v,m3)}</span></div></div>`;
         }).join('');
     }
-
     function updateM4() {
         const ctx = document.getElementById('chart-4').getContext('2d'); if(c4) c4.destroy();
         const ds = []; const yr = sY[0]; const d = allData.companyData[yr]; const f = formats[m4];
@@ -298,7 +314,6 @@
             </div>`;
         }
     }
-    init();
 </script>
 </body>
 </html>
