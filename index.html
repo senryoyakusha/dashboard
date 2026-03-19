@@ -13,7 +13,7 @@
         :root { --bg: #121212; --card: #1e1e1e; --gold: #d4af37; --white: #ffffff; --gray: #2a2a2a; }
         body { font-family: sans-serif; background: var(--bg); color: var(--white); margin: 0; overflow: hidden; }
         header { padding: 15px; background: var(--card); border-bottom: 1px solid #333; text-align: center; color: var(--gold); font-weight: bold; letter-spacing: 2px; }
-        .container { width: 94%; max-width: 500px; margin: 10px auto; padding-bottom: 60px; }
+        .container { width: 94%; max-width: 500px; margin: 10px auto; padding-bottom: 80px; }
         .swiper { width: 100%; height: 100vh; }
         .swiper-slide { height: 100%; overflow-y: auto; }
         .year-selector { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; }
@@ -50,7 +50,7 @@
 <div class="swiper">
     <div class="swiper-wrapper">
         <div class="swiper-slide">
-            <header>SALES DASHBOARD</header>
+            <header>SALES PERFORMANCE</header>
             <div class="container">
                 <div class="year-selector" id="year-selector-1"></div>
                 <div class="metric-selector">
@@ -61,9 +61,7 @@
                     <button class="metric-btn" onclick="changeMetric('nextReserve', this)">次回予約率</button>
                     <button class="metric-btn" onclick="changeMetric('newRepeat', this)">新規再来率</button>
                 </div>
-                <div class="select-box" onclick="toggleDropdown('sales-drop')">
-                    <span id="sales-label">スタッフを選択</span><i class="fas fa-users"></i>
-                </div>
+                <div class="select-box" onclick="toggleDropdown('sales-drop')"><span id="sales-label">スタッフを選択</span><i class="fas fa-users"></i></div>
                 <div id="sales-drop" class="dropdown"></div>
                 <div class="chart-card"><canvas id="salesChart"></canvas></div>
                 <div class="stats-container"><div class="stats-title" id="sales-title">実績データ</div><div id="sales-cards-list"></div></div>
@@ -71,7 +69,7 @@
         </div>
 
         <div class="swiper-slide">
-            <header>COST DASHBOARD</header>
+            <header>COST ANALYSIS</header>
             <div class="container">
                 <div class="year-selector" id="year-selector-2"></div>
                 <div class="metric-selector">
@@ -82,12 +80,34 @@
                     <button class="metric-btn" onclick="changeMatMetric('treatmentRate', this)">トリートメント材料費率</button>
                     <button class="metric-btn" onclick="changeMatMetric('permRate', this)">パーマ縮毛材料費率</button>
                 </div>
-                <div class="select-box" onclick="toggleDropdown('mat-drop')">
-                    <span id="mat-label">店舗を選択</span><i class="fas fa-store"></i>
-                </div>
+                <div class="select-box" onclick="toggleDropdown('mat-drop')"><span id="mat-label">店舗を選択</span><i class="fas fa-store"></i></div>
                 <div id="mat-drop" class="dropdown"></div>
                 <div class="chart-card"><canvas id="matChart"></canvas></div>
                 <div class="stats-container"><div class="stats-title" id="mat-title">材料費実績</div><div id="mat-cards-list"></div></div>
+            </div>
+        </div>
+
+        <div class="swiper-slide">
+            <header>STORE ANALYSIS</header>
+            <div class="container">
+                <div class="year-selector" id="year-selector-3"></div>
+                <div class="metric-selector">
+                    <button class="metric-btn active" onclick="changeAnaMetric('storeSales', this)">総売上</button>
+                    <button class="metric-btn" onclick="changeAnaMetric('storeProfit', this)">店舗営業利益</button>
+                    <button class="metric-btn" onclick="changeAnaMetric('storeMatRate', this)">材料費率</button>
+                    <button class="metric-btn" onclick="changeAnaMetric('storeShimei', this)">指名売上</button>
+                    <button class="metric-btn" onclick="changeAnaMetric('storeTech', this)">技術売上</button>
+                    <button class="metric-btn" onclick="changeAnaMetric('storeTenba', this)">店販売上</button>
+                    <button class="metric-btn" onclick="changeAnaMetric('storeAvgPrice', this)">客単価</button>
+                    <button class="metric-btn" onclick="changeAnaMetric('storeNewCount', this)">新規客数</button>
+                    <button class="metric-btn" onclick="changeAnaMetric('storeHourPrice', this)">時間単価</button>
+                    <button class="metric-btn" onclick="changeAnaMetric('storeNextRate', this)">次回予約率</button>
+                    <button class="metric-btn" onclick="changeAnaMetric('storeNewRepeat', this)">新規再来率</button>
+                </div>
+                <div class="select-box" onclick="toggleDropdown('ana-drop')"><span id="ana-label">店舗を選択</span><i class="fas fa-chart-line"></i></div>
+                <div id="ana-drop" class="dropdown"></div>
+                <div class="chart-card"><canvas id="anaChart"></canvas></div>
+                <div class="stats-container"><div class="stats-title" id="ana-title">店舗分析実績</div><div id="ana-cards-list"></div></div>
             </div>
         </div>
     </div>
@@ -99,18 +119,17 @@
     const currentUserId = "user_gps3atgzq"; 
     const BASE_COLORS = ['rgba(212, 175, 55', 'rgba(52, 152, 219', 'rgba(231, 76, 60', 'rgba(46, 204, 113', 'rgba(155, 89, 182', 'rgba(241, 196, 15', 'rgba(26, 188, 156', 'rgba(230, 126, 34'];
 
-    let allData = null, salesChart = null, matChart = null;
-    let selectedKeys = [], selectedYears = [], selectedStores = [], currentMetric = 'sales', currentMatMetric = 'totalRate';
+    let allData = null, salesChart = null, matChart = null, anaChart = null;
+    let selectedKeys = [], selectedYears = [], selectedStores = [], selectedAnaStores = [];
+    let currentMetric = 'sales', currentMatMetric = 'totalRate', currentAnaMetric = 'storeSales';
     
     const formats = {
-        sales: { u: '￥', s: '', d: 0 }, shimeiSales: { u: '￥', s: '', d: 0 }, timePrice: { u: '￥', s: '', d: 0 },
-        shimeiCount: { u: '', s: '名', d: 0 }, nextReserve: { u: '', s: '％', d: 2 }, newRepeat: { u: '', s: '％', d: 2 },
-        forecast: { u: '￥', s: '', d: 0 }, 
-        totalRate: { u: '', s: '％', d: 2 }, techRate: { u: '', s: '％', d: 2 }, orderableAmount: { u: '￥', s: '', d: 0 },
-        colorRate: { u: '', s: '％', d: 2 }, treatmentRate: { u: '', s: '％', d: 2 }, permRate: { u: '', s: '％', d: 2 }
+        sales: { u: '￥', s: '', d: 0 }, shimeiSales: { u: '￥', s: '', d: 0 }, timePrice: { u: '￥', s: '', d: 0 }, shimeiCount: { u: '', s: '名', d: 0 }, nextReserve: { u: '', s: '％', d: 2 }, newRepeat: { u: '', s: '％', d: 2 }, forecast: { u: '￥', s: '', d: 0 },
+        totalRate: { u: '', s: '％', d: 2 }, techRate: { u: '', s: '％', d: 2 }, orderableAmount: { u: '￥', s: '', d: 0 }, colorRate: { u: '', s: '％', d: 2 }, treatmentRate: { u: '', s: '％', d: 2 }, permRate: { u: '', s: '％', d: 2 },
+        storeSales: { u: '￥', s: '', d: 0 }, storeTarget: { u: '￥', s: '', d: 0 }, storeProfit: { u: '￥', s: '', d: 0 }, storeMatRate: { u: '', s: '％', d: 2 }, storeShimei: { u: '￥', s: '', d: 0 }, storeTech: { u: '￥', s: '', d: 0 }, storeTenba: { u: '￥', s: '', d: 0 }, storeAvgPrice: { u: '￥', s: '', d: 0 }, storeNewCount: { u: '', s: '名', d: 0 }, storeHourPrice: { u: '￥', s: '', d: 0 }, storeNextRate: { u: '', s: '％', d: 2 }, storeNewRepeat: { u: '', s: '％', d: 2 }
     };
 
-    const swiper = new Swiper('.swiper', { pagination: { el: '.swiper-pagination' }, edgeSwipeDetection: true });
+    const swiper = new Swiper('.swiper', { pagination: { el: '.swiper-pagination' } });
 
     async function init() {
         try {
@@ -120,9 +139,10 @@
                 selectedYears = [allData.yearList[0]];
                 const myStore = allData.staffList.find(s => s.name === allData.myInfo.userName)?.store || allData.storeList[0];
                 selectedKeys = allData.staffList.filter(s => s.store === myStore).map(s => s.name);
-                selectedStores = [myStore];
-                renderYearSelectors(); renderSalesDropdown(myStore); renderMatDropdown(myStore);
-                updateSalesDisplay(); updateMatDisplay();
+                selectedStores = [myStore]; selectedAnaStores = [myStore];
+
+                renderYearSelectors(); renderSalesDropdown(myStore); renderMatDropdown(myStore); renderAnaDropdown(myStore);
+                updateSalesDisplay(); updateMatDisplay(); updateAnaDisplay();
                 document.getElementById('loading').style.display = 'none';
             }
         } catch (e) { console.error(e); }
@@ -131,29 +151,25 @@
     function getFormatted(val, metric) {
         const f = formats[metric] || { u: '', s: '', d: 0 };
         let displayVal = Number(val);
-        // パーセンテージ計算（0.08 を 8.00 に変換）
         if (f.s === '％') displayVal *= 100;
         return f.u + displayVal.toLocaleString(undefined, {minimumFractionDigits: f.d, maximumFractionDigits: f.d}) + f.s;
     }
 
     function renderYearSelectors() {
         const html = allData.yearList.map(y => `<button class="year-btn ${selectedYears.includes(y) ? 'active' : ''}" onclick="toggleYear('${y}')">${y}年</button>`).join('');
-        document.getElementById('year-selector-1').innerHTML = html;
-        document.getElementById('year-selector-2').innerHTML = html;
+        ['1','2','3'].forEach(i => document.getElementById('year-selector-'+i).innerHTML = html);
     }
 
-    function toggleYear(year) {
-        if (selectedYears.includes(year)) { if (selectedYears.length > 1) selectedYears = selectedYears.filter(y => y !== year); }
-        else { selectedYears.push(year); }
-        selectedYears.sort().reverse();
-        renderYearSelectors(); updateSalesDisplay(); updateMatDisplay();
+    function toggleYear(y) {
+        if (selectedYears.includes(y)) { if (selectedYears.length > 1) selectedYears = selectedYears.filter(x => x !== y); }
+        else { selectedYears.push(y); }
+        selectedYears.sort().reverse(); renderYearSelectors(); updateSalesDisplay(); updateMatDisplay(); updateAnaDisplay();
     }
 
     function toggleDropdown(id) { const el = document.getElementById(id); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }
 
     function renderSalesDropdown(myStore) {
-        const container = document.getElementById('sales-drop');
-        let html = "";
+        const container = document.getElementById('sales-drop'); let html = "";
         allData.storeList.forEach(store => {
             html += `<div class="store-header"><input type="checkbox" id="s-${store}" onchange="toggleSalesStore('${store}', this)"><label for="s-${store}">${store}</label></div>`;
             allData.staffList.filter(s => s.store === store).forEach(s => {
@@ -164,30 +180,33 @@
     }
 
     function renderMatDropdown(myStore) {
-        document.getElementById('mat-drop').innerHTML = allData.storeList.map(store => `
-            <div class="store-header">
-                <input type="checkbox" class="m-chk" value="${store}" ${selectedStores.includes(store) ? 'checked' : ''} onchange="handleMatChange()">
-                <label onclick="this.previousElementSibling.click()">${store}</label>
-            </div>
-        `).join('');
+        document.getElementById('mat-drop').innerHTML = allData.storeList.map(store => `<div class="store-header"><input type="checkbox" class="m-chk" value="${store}" ${selectedStores.includes(store) ? 'checked' : ''} onchange="handleMatChange()"><label onclick="this.previousElementSibling.click()">${store}</label></div>`).join('');
         updateMatLabel();
     }
 
-    function toggleSalesStore(store, el) { document.querySelectorAll(`.s-chk[data-store="${store}"]`).forEach(c => c.checked = el.checked); handleSalesChange(); }
+    function renderAnaDropdown(myStore) {
+        document.getElementById('ana-drop').innerHTML = allData.storeList.map(store => `<div class="store-header"><input type="checkbox" class="a-chk" value="${store}" ${selectedAnaStores.includes(store) ? 'checked' : ''} onchange="handleAnaChange()"><label onclick="this.previousElementSibling.click()">${store}</label></div>`).join('');
+        updateAnaLabel();
+    }
+
+    function toggleSalesStore(s, el) { document.querySelectorAll(`.s-chk[data-store="${s}"]`).forEach(c => c.checked = el.checked); handleSalesChange(); }
     function handleSalesChange() { selectedKeys = Array.from(document.querySelectorAll('.s-chk:checked')).map(c => c.value); updateSalesLabel(); updateSalesDisplay(); }
     function handleMatChange() { selectedStores = Array.from(document.querySelectorAll('.m-chk:checked')).map(c => c.value); updateMatLabel(); updateMatDisplay(); }
+    function handleAnaChange() { selectedAnaStores = Array.from(document.querySelectorAll('.a-chk:checked')).map(c => c.value); updateAnaLabel(); updateAnaDisplay(); }
     function updateSalesLabel() { document.getElementById('sales-label').innerText = selectedKeys.length + "名を選択中"; }
     function updateMatLabel() { document.getElementById('mat-label').innerText = selectedStores.length + "店舗を選択中"; }
+    function updateAnaLabel() { document.getElementById('ana-label').innerText = selectedAnaStores.length + "店舗を選択中"; }
 
     function changeMetric(m, btn) { document.querySelectorAll('#year-selector-1 + .metric-selector .metric-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentMetric = m; updateSalesDisplay(); }
     function changeMatMetric(m, btn) { document.querySelectorAll('#year-selector-2 + .metric-selector .metric-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentMatMetric = m; updateMatDisplay(); }
+    function changeAnaMetric(m, btn) { document.querySelectorAll('#year-selector-3 + .metric-selector .metric-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentAnaMetric = m; updateAnaDisplay(); }
 
     function updateSalesDisplay() { updateSalesChart(); updateSalesCards(); }
     function updateMatDisplay() { updateMatChart(); updateMatCards(); }
+    function updateAnaDisplay() { updateAnaChart(); updateAnaCards(); }
 
     function updateSalesCards() {
         const list = document.getElementById('sales-cards-list'); const year = selectedYears[0]; const month = new Date().getMonth();
-        document.getElementById('sales-title').innerText = (currentMetric === 'sales') ? `${year}年 ${month+1}月 予測vs実績` : `${year}年 ${month+1}月 実績`;
         list.innerHTML = selectedKeys.map((name, i) => {
             const val = allData.chartData[year]?.[name]?.[currentMetric]?.[month] || 0;
             const forecast = allData.chartData[year]?.[name]?.['forecast']?.[month] || 0;
@@ -199,37 +218,36 @@
 
     function updateMatCards() {
         const list = document.getElementById('mat-cards-list'); const year = selectedYears[0]; const month = new Date().getMonth();
-        list.innerHTML = selectedStores.map((store, i) => {
-            const val = allData.materialData[year]?.[store]?.[currentMatMetric]?.[month] || 0;
-            return `<div class="stat-card" style="border-left-color:rgba(${BASE_COLORS[i % BASE_COLORS.length]},1)"><div class="stat-row"><span class="stat-name">${store}</span><span class="data-value">${getFormatted(val, currentMatMetric)}</span></div></div>`;
+        list.innerHTML = selectedStores.map((store, i) => `<div class="stat-card" style="border-left-color:rgba(${BASE_COLORS[i % BASE_COLORS.length]},1)"><div class="stat-row"><span class="stat-name">${store}</span><span class="data-value">${getFormatted(allData.materialData[year]?.[store]?.[currentMatMetric]?.[month] || 0, currentMatMetric)}</span></div></div>`).join('');
+    }
+
+    function updateAnaCards() {
+        const list = document.getElementById('ana-cards-list'); const year = selectedYears[0]; const month = new Date().getMonth();
+        list.innerHTML = selectedAnaStores.map((store, i) => {
+            const val = allData.storeAnalysisData[year]?.[store]?.[currentAnaMetric]?.[month] || 0;
+            const target = allData.storeAnalysisData[year]?.[store]?.['storeTarget']?.[month] || 0;
+            const color = `rgba(${BASE_COLORS[i % BASE_COLORS.length]}, 1)`;
+            if (currentAnaMetric === 'storeSales') return `<div class="stat-card" style="border-left-color:${color}"><span class="stat-name">${store}</span><div class="comparison-grid"><div class="data-item"><span class="data-label">店舗目標</span><span class="data-value sub">${getFormatted(target,'storeTarget')}</span></div><div class="data-item"><span class="data-label">店舗実績</span><span class="data-value">${getFormatted(val, currentAnaMetric)}</span></div></div></div>`;
+            return `<div class="stat-card" style="border-left-color:${color}"><div class="stat-row"><span class="stat-name">${store}</span><span class="data-value">${getFormatted(val, currentAnaMetric)}</span></div></div>`;
         }).join('');
     }
 
-    function updateSalesChart() {
-        const ctx = document.getElementById('salesChart').getContext('2d'); if (salesChart) salesChart.destroy();
+    function drawChart(id, chart, keys, dataSrc, metric, formatKey) {
+        const ctx = document.getElementById(id).getContext('2d'); if (chart) chart.destroy();
         const datasets = [];
-        selectedKeys.forEach((name, i) => {
+        keys.forEach((key, i) => {
             const base = BASE_COLORS[i % BASE_COLORS.length];
             selectedYears.forEach((year, yIdx) => {
                 const color = `${base}, ${Math.max(1-(yIdx*0.4), 0.2)})`;
-                datasets.push({ label: `${name}(${year})`, data: allData.chartData[year]?.[name]?.[currentMetric] || new Array(12).fill(0), borderColor: color, backgroundColor: color, borderWidth: yIdx===0?3:1.5, pointRadius: yIdx===0?4:2, pointHitRadius: 30, tension: 0.3, fill: false });
+                datasets.push({ label: `${key}(${year})`, data: dataSrc[year]?.[key]?.[metric] || new Array(12).fill(0), borderColor: color, backgroundColor: color, borderWidth: yIdx===0?3:1.5, pointRadius: yIdx===0?4:2, pointHitRadius: 30, tension: 0.3, fill: false });
             });
         });
-        salesChart = new Chart(ctx, { type: 'line', data: { labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => getFormatted(v, currentMetric), color: '#aaa', font: { size: 9 } } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.dataset.label + ': ' + getFormatted(c.parsed.y, currentMetric) } } } } });
+        return new Chart(ctx, { type: 'line', data: { labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => getFormatted(v, formatKey), color: '#aaa', font: { size: 9 } } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.dataset.label + ': ' + getFormatted(c.parsed.y, formatKey) } } } } });
     }
 
-    function updateMatChart() {
-        const ctx = document.getElementById('matChart').getContext('2d'); if (matChart) matChart.destroy();
-        const datasets = [];
-        selectedStores.forEach((store, i) => {
-            const base = BASE_COLORS[i % BASE_COLORS.length];
-            selectedYears.forEach((year, yIdx) => {
-                const color = `${base}, ${Math.max(1-(yIdx*0.4), 0.2)})`;
-                datasets.push({ label: `${store}(${year})`, data: allData.materialData[year]?.[store]?.[currentMatMetric] || new Array(12).fill(0), borderColor: color, backgroundColor: color, borderWidth: yIdx===0?3:1.5, pointRadius: yIdx===0?4:2, pointHitRadius: 30, tension: 0.3, fill: false });
-            });
-        });
-        matChart = new Chart(ctx, { type: 'line', data: { labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => getFormatted(v, currentMatMetric), color: '#aaa', font: { size: 9 } } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.dataset.label + ': ' + getFormatted(c.parsed.y, currentMatMetric) } } } } });
-    }
+    function updateSalesChart() { salesChart = drawChart('salesChart', salesChart, selectedKeys, allData.chartData, currentMetric, currentMetric); }
+    function updateMatChart() { matChart = drawChart('matChart', matChart, selectedStores, allData.materialData, currentMatMetric, currentMatMetric); }
+    function updateAnaChart() { anaChart = drawChart('anaChart', anaChart, selectedAnaStores, allData.storeAnalysisData, currentAnaMetric, currentAnaMetric); }
 
     init();
 </script>
