@@ -283,7 +283,7 @@
         const ds = []; sK.forEach((key, i) => {
             const base = COLORS[i % COLORS.length];
             sY.forEach((y, yIdx) => {
-                const color = `rgba(${base}, ${Math.max(1-(yIdx*0.4),0.2)})`;
+                const color = `${base}, ${Math.max(1-(yIdx*0.4),0.2)})`;
                 ds.push({ label:`${key}(${y})`, data: allData.chartData[y]?.[key]?.[m1] || new Array(12).fill(0), borderColor:color, backgroundColor:color, borderWidth:yIdx===0?3:1.5, pointRadius:yIdx===0?4:2, pointHitRadius:30, tension:0.3, fill:false });
             });
         });
@@ -292,7 +292,7 @@
         document.getElementById('cards-1').innerHTML = sK.map((n,i) => {
             const v = allData.chartData[yr]?.[n]?.[m1]?.[mo] || 0;
             const f = allData.chartData[yr]?.[n]?.['forecast']?.[mo] || 0;
-            const c = `rgba(${COLORS[i % COLORS.length]}, 1)`;
+            const c = `${COLORS[i % COLORS.length]}, 1)`;
             if(m1==='sales') return `<div class="stat-card" style="border-left-color:${c}"><span class="stat-name">${n}</span><div class="comparison-grid"><div class="data-item"><span class="data-label">予測</span><span class="data-value sub">${getF(f,'sales')}</span></div><div class="data-item"><span class="data-label">実績</span><span class="data-value">${getF(v,m1)}</span></div></div></div>`;
             return `<div class="stat-card" style="border-left-color:${c}"><div class="stat-row"><span class="stat-name">${n}</span><span class="data-value">${getF(v,m1)}</span></div></div>`;
         }).join('');
@@ -303,7 +303,7 @@
         const ds = []; sS.forEach((key, i) => {
             const base = COLORS[i % COLORS.length];
             sY.forEach((y, yIdx) => {
-                const color = `rgba(${base}, ${Math.max(1-(yIdx*0.4),0.2)})`;
+                const color = `${base}, ${Math.max(1-(yIdx*0.4),0.2)})`;
                 ds.push({ label:`${key}(${y})`, data: allData.materialData[y]?.[key]?.[m2] || new Array(12).fill(0), borderColor:color, backgroundColor:color, borderWidth:yIdx===0?3:1.5, pointRadius:yIdx===0?4:2, pointHitRadius:30, tension:0.3, fill:false });
             });
         });
@@ -323,7 +323,7 @@
 
         c2 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{ y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{callback:v=>getF(v,m2), color:'#aaa', font:{size:9}}}}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+getF(c.parsed.y,m2)}}}}});
         const yr = sY[0]; const mo = new Date().getMonth();
-        document.getElementById('cards-2').innerHTML = sS.map((st,i) => `<div class="stat-card" style="border-left-color:rgba(${COLORS[i % COLORS.length]},1)"><div class="stat-row"><span class="stat-name">${st}</span><span class="data-value">${getF(allData.materialData[yr]?.[st]?.[m2]?.[mo]||0,m2)}</span></div></div>`).join('');
+        document.getElementById('cards-2').innerHTML = sS.map((st,i) => `<div class="stat-card" style="border-left-color:${COLORS[i % COLORS.length]},1)"><div class="stat-row"><span class="stat-name">${st}</span><span class="data-value">${getF(allData.materialData[yr]?.[st]?.[m2]?.[mo]||0,m2)}</span></div></div>`).join('');
     }
     
     async function updateM3() {
@@ -331,7 +331,7 @@
         const ds = []; sA.forEach((key, i) => {
             const base = COLORS[i % COLORS.length];
             sY.forEach((y, yIdx) => {
-                const color = `rgba(${base}, ${Math.max(1-(yIdx*0.4),0.2)})`;
+                const color = `${base}, ${Math.max(1-(yIdx*0.4),0.2)})`;
                 ds.push({ label:`${key}(${y})`, data: allData.storeAnalysisData[y]?.[key]?.[m3] || new Array(12).fill(0), borderColor:color, backgroundColor:color, borderWidth:yIdx===0?3:1.5, pointRadius:yIdx===0?4:2, pointHitRadius:30, tension:0.3, fill:false });
                 
                 // コアメンバーダッシュボード：目標値のラインを追加
@@ -342,7 +342,7 @@
                         ds.push({ 
                             label:`${key}(${y}) 目標`, 
                             data: targetData, 
-                            borderColor: `rgba(${base}, 0.5)`,
+                            borderColor: `${base}, 0.5)`,
                             borderWidth: 2, 
                             borderDash: [5,5], 
                             pointRadius: 0, 
@@ -357,12 +357,13 @@
         const yr = sY[0]; const mo = new Date().getMonth();
         document.getElementById('cards-3').innerHTML = sA.map((st,i) => {
             const v = allData.storeAnalysisData[yr]?.[st]?.[m3]?.[mo] || 0;
-            const c = `rgba(${COLORS[i % COLORS.length]}, 1)`;
+            const t = allData.storeAnalysisData[yr]?.[st]?.['storeTarget']?.[mo] || 0;
+            const c = `${COLORS[i % COLORS.length]}, 1)`;
             
             if(m3==='storeSales' || m3==='storeProfit') {
                 const tKey = formats[m3].t;
-                const t = allData.storeAnalysisData[yr]?.[st]?.[tKey]?.[mo] || 0;
-                return `<div class="stat-card" style="border-left-color:${c}"><span class="stat-name">${st}</span><div class="comparison-grid"><div class="data-item"><span class="data-label">目標</span><span class="data-value sub">${getF(t,m3)}</span></div><div class="data-item"><span class="data-label">実績</span><span class="data-value">${getF(v,m3)}</span></div></div></div>`;
+                const tTarget = allData.storeAnalysisData[yr]?.[st]?.[tKey]?.[mo] || 0;
+                return `<div class="stat-card" style="border-left-color:${c}"><span class="stat-name">${st}</span><div class="comparison-grid"><div class="data-item"><span class="data-label">目標</span><span class="data-value sub">${getF(tTarget,m3)}</span></div><div class="data-item"><span class="data-label">実績</span><span class="data-value">${getF(v,m3)}</span></div></div></div>`;
             }
             return `<div class="stat-card" style="border-left-color:${c}"><div class="stat-row"><span class="stat-name">${st}</span><span class="data-value">${getF(v,m3)}</span></div></div>`;
         }).join('');
