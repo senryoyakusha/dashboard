@@ -28,7 +28,7 @@
 
         .header-logo { 
             position: absolute; 
-            left: -40px; /* ここでお好みの左寄せ具合を調整 */
+            left: -40px; 
             top: 50%; 
             transform: translateY(-50%); 
             width: 300px; 
@@ -58,7 +58,6 @@
         .swiper-slide { width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .container { width: 94%; max-width: 500px; margin: 10px auto; padding-bottom: 120px; }
         
-        /* ボタンエリアの横スクロール設定 */
         .metric-selector { 
             display: flex; 
             overflow-x: auto; 
@@ -189,7 +188,7 @@
     const formats = {
         sales:{u:'￥',s:'',d:0,t:'forecast'}, shimeiSales:{u:'￥',s:'',d:0}, timePrice:{u:'￥',s:'',d:0}, shimeiCount:{u:'',s:'名',d:0}, nextReserve:{u:'',s:'％',d:2}, newRepeat:{u:'',s:'％',d:2},
         totalRate:{u:'',s:'％',d:2}, techRate:{u:'',s:'％',d:2}, orderableAmount:{u:'￥',s:'',d:0}, colorRate:{u:'',s:'％',d:2}, treatmentRate:{u:'',s:'％',d:2}, permRate:{u:'',s:'％',d:2},
-        storeSales:{u:'￥',s:'',d:0,t:'storeTarget'}, storeAchieveRate:{u:'',s:'％',d:2}, storeProfit:{u:'￥',s:'',d:0}, storeShimei:{u:'￥',s:'',d:0}, storeTech:{u:'￥',s:'',d:0}, storeTenba:{u:'￥',s:'',d:0}, storeAvgPrice:{u:'￥',s:'',d:0}, storeNewCount:{u:'',s:'名',d:0}, storeHourPrice:{u:'￥',s:'',d:0}, storeNextRate:{u:'',s:'％',d:2}, storeNewRepeat:{u:'',s:'％',d:2},
+        storeSales:{u:'￥',s:'',d:0,t:'storeTarget'}, storeAchieveRate:{u:'',s:'％',d:2}, storeProfit:{u:'￥',s:'',d:0,t:'storeProfitTarget'}, storeShimei:{u:'￥',s:'',d:0}, storeTech:{u:'￥',s:'',d:0}, storeTenba:{u:'￥',s:'',d:0}, storeAvgPrice:{u:'￥',s:'',d:0}, storeNewCount:{u:'',s:'名',d:0}, storeHourPrice:{u:'￥',s:'',d:0}, storeNextRate:{u:'',s:'％',d:2}, storeNewRepeat:{u:'',s:'％',d:2},
         totalSales:{u:'￥',s:'',d:0,t:'totalSalesTarget'}, totalSalesRate:{u:'',s:'％',d:2},
         storeProfit:{u:'￥',s:'',d:0,t:'storeProfitTarget'}, storeProfitRate:{u:'',s:'％',d:2},
         companyProfit:{u:'￥',s:'',d:0,t:'companyProfitTarget'}, companyProfitRate:{u:'',s:'％',d:2},
@@ -233,10 +232,13 @@
                 });
 
                 sY = [allData.yearList[0]];
-                const myInfo = allData.staffList.find(s => s.name.replace(/\s+/g, "") === uName);
+                const myInfo = allData.staffList.find(s => s.rawName.replace(/\s+/g, "") === uName);
                 const myStore = myInfo ? myInfo.store : allData.storeList[0];
-                sK = [allData.staffList.find(s => s.name.replace(/\s+/g, "") === uName)?.name].filter(Boolean);
+                
+                // 個人にチェックだけで始まるように統一（複数店舗所属でも、本人の全店舗分にチェックを入れる）
+                sK = allData.staffList.filter(s => s.rawName.replace(/\s+/g, "") === uName).map(s => s.name);
                 if(sK.length === 0) sK = [allData.staffList[0].name];
+                
                 sS = [myStore]; sA = [myStore];
 
                 renderYears(); renderDrops();
@@ -281,7 +283,7 @@
         const ds = []; sK.forEach((key, i) => {
             const base = COLORS[i % COLORS.length];
             sY.forEach((y, yIdx) => {
-                const color = `${base}, ${Math.max(1-(yIdx*0.4),0.2)})`;
+                const color = `rgba(${base}, ${Math.max(1-(yIdx*0.4),0.2)})`;
                 ds.push({ label:`${key}(${y})`, data: allData.chartData[y]?.[key]?.[m1] || new Array(12).fill(0), borderColor:color, backgroundColor:color, borderWidth:yIdx===0?3:1.5, pointRadius:yIdx===0?4:2, pointHitRadius:30, tension:0.3, fill:false });
             });
         });
@@ -295,38 +297,77 @@
             return `<div class="stat-card" style="border-left-color:${c}"><div class="stat-row"><span class="stat-name">${n}</span><span class="data-value">${getF(v,m1)}</span></div></div>`;
         }).join('');
     }
+    
     async function updateM2() {
         const ctx = document.getElementById('chart-2').getContext('2d'); if(c2) c2.destroy();
         const ds = []; sS.forEach((key, i) => {
             const base = COLORS[i % COLORS.length];
             sY.forEach((y, yIdx) => {
-                const color = `${base}, ${Math.max(1-(yIdx*0.4),0.2)})`;
+                const color = `rgba(${base}, ${Math.max(1-(yIdx*0.4),0.2)})`;
                 ds.push({ label:`${key}(${y})`, data: allData.materialData[y]?.[key]?.[m2] || new Array(12).fill(0), borderColor:color, backgroundColor:color, borderWidth:yIdx===0?3:1.5, pointRadius:yIdx===0?4:2, pointHitRadius:30, tension:0.3, fill:false });
             });
         });
+        
+        // 目安ラインの追加（技術材料費率の場合のみ）
+        if (m2 === 'techRate') {
+            ds.push({
+                label: '目安ライン(7.5%)',
+                data: new Array(12).fill(0.075),
+                borderColor: 'rgba(255, 99, 132, 0.8)',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                pointRadius: 0,
+                fill: false
+            });
+        }
+
         c2 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{ y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{callback:v=>getF(v,m2), color:'#aaa', font:{size:9}}}}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+getF(c.parsed.y,m2)}}}}});
         const yr = sY[0]; const mo = new Date().getMonth();
         document.getElementById('cards-2').innerHTML = sS.map((st,i) => `<div class="stat-card" style="border-left-color:rgba(${COLORS[i % COLORS.length]},1)"><div class="stat-row"><span class="stat-name">${st}</span><span class="data-value">${getF(allData.materialData[yr]?.[st]?.[m2]?.[mo]||0,m2)}</span></div></div>`).join('');
     }
+    
     async function updateM3() {
         const ctx = document.getElementById('chart-3').getContext('2d'); if(c3) c3.destroy();
         const ds = []; sA.forEach((key, i) => {
             const base = COLORS[i % COLORS.length];
             sY.forEach((y, yIdx) => {
-                const color = `${base}, ${Math.max(1-(yIdx*0.4),0.2)})`;
+                const color = `rgba(${base}, ${Math.max(1-(yIdx*0.4),0.2)})`;
                 ds.push({ label:`${key}(${y})`, data: allData.storeAnalysisData[y]?.[key]?.[m3] || new Array(12).fill(0), borderColor:color, backgroundColor:color, borderWidth:yIdx===0?3:1.5, pointRadius:yIdx===0?4:2, pointHitRadius:30, tension:0.3, fill:false });
+                
+                // コアメンバーダッシュボード：目標値のラインを追加
+                const format = formats[m3];
+                if (format && format.t && yIdx === 0) {
+                    const targetData = allData.storeAnalysisData[y]?.[key]?.[format.t] || new Array(12).fill(0);
+                    if (targetData.some(v => v > 0)) {
+                        ds.push({ 
+                            label:`${key}(${y}) 目標`, 
+                            data: targetData, 
+                            borderColor: `rgba(${base}, 0.5)`,
+                            borderWidth: 2, 
+                            borderDash: [5,5], 
+                            pointRadius: 0, 
+                            tension: 0.3, 
+                            fill: false 
+                        });
+                    }
+                }
             });
         });
         c3 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{ y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{callback:v=>getF(v,m3), color:'#aaa', font:{size:9}}}}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+getF(c.parsed.y,m3)}}}}});
         const yr = sY[0]; const mo = new Date().getMonth();
         document.getElementById('cards-3').innerHTML = sA.map((st,i) => {
             const v = allData.storeAnalysisData[yr]?.[st]?.[m3]?.[mo] || 0;
-            const t = allData.storeAnalysisData[yr]?.[st]?.['storeTarget']?.[mo] || 0;
             const c = `rgba(${COLORS[i % COLORS.length]}, 1)`;
-            if(m3==='storeSales') return `<div class="stat-card" style="border-left-color:${c}"><span class="stat-name">${st}</span><div class="comparison-grid"><div class="data-item"><span class="data-label">目標</span><span class="data-value sub">${getF(t,'storeSales')}</span></div><div class="data-item"><span class="data-label">実績</span><span class="data-value">${getF(v,m3)}</span></div></div></div>`;
+            
+            if(m3==='storeSales' || m3==='storeProfit') {
+                const tKey = formats[m3].t;
+                const t = allData.storeAnalysisData[yr]?.[st]?.[tKey]?.[mo] || 0;
+                return `<div class="stat-card" style="border-left-color:${c}"><span class="stat-name">${st}</span><div class="comparison-grid"><div class="data-item"><span class="data-label">目標</span><span class="data-value sub">${getF(t,m3)}</span></div><div class="data-item"><span class="data-label">実績</span><span class="data-value">${getF(v,m3)}</span></div></div></div>`;
+            }
             return `<div class="stat-card" style="border-left-color:${c}"><div class="stat-row"><span class="stat-name">${st}</span><span class="data-value">${getF(v,m3)}</span></div></div>`;
         }).join('');
     }
+    
     async function updateM4() {
         const ctx = document.getElementById('chart-4').getContext('2d'); if(c4) c4.destroy();
         const ds = []; const yr = sY[0]; const d = allData.companyData[yr]; const f = formats[m4];
