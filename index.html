@@ -2,383 +2,3253 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
+
     <title>Management Dashboard 2026</title>
+
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"
+    >
+
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
     <style>
-        :root { --bg: #121212; --card: #1e1e1e; --gold: #d4af37; --white: #ffffff; --gray: #2a2a2a; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--white); margin: 0; overflow: hidden; width: 100vw; height: 100vh; }
-        
-        header { 
-            height: 60px; 
-            background: var(--card); 
-            border-bottom: 1px solid #333; 
-            display: flex; 
-            align-items: center; 
-            padding: 0 15px; 
-            flex-shrink: 0; 
-            z-index: 10; 
+        :root {
+            --bg: #121212;
+            --card: #1e1e1e;
+            --gold: #d4af37;
+            --white: #ffffff;
+            --gray: #2a2a2a;
+            --low: #f4cccc;
+            --low-dark: #7a3030;
+        }
+
+        body {
+            font-family: sans-serif;
+            background: var(--bg);
+            color: var(--white);
+            margin: 0;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        header {
+            height: 60px;
+            background: var(--card);
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            flex-shrink: 0;
+            z-index: 10;
             position: relative;
         }
 
-        .header-logo { 
-            position: absolute; 
-            left: -40px; 
-            top: 50%; 
-            transform: translateY(-50%); 
-            width: 300px; 
-            height: 120px; 
-            object-fit: contain; 
-            z-index: 5; 
-            pointer-events: none; 
+        .header-logo {
+            position: absolute;
+            left: -40px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 300px;
+            height: 120px;
+            object-fit: contain;
+            z-index: 5;
+            pointer-events: none;
         }
 
-        .header-title { 
-            position: absolute; 
-            right: 15px; 
-            top: 50%; 
+        .header-title {
+            position: absolute;
+            right: 15px;
+            top: 50%;
             transform: translateY(-50%);
-            color: var(--gold); 
-            font-weight: bold; 
-            font-size: 0.75rem; 
-            text-transform: uppercase; 
-            z-index: 10; 
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.8); 
+            color: var(--gold);
+            font-weight: bold;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            z-index: 10;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
             pointer-events: none;
             max-width: 40%;
             text-align: right;
         }
-        
-        .swiper { width: 100%; height: 100%; }
-        .swiper-slide { width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-        .container { width: 94%; max-width: 500px; margin: 10px auto; padding-bottom: 120px; }
-        
-        .metric-selector { 
-            display: flex; 
-            overflow-x: auto; 
-            gap: 8px; 
-            padding-bottom: 12px; 
-            scrollbar-width: none; 
-            -webkit-overflow-scrolling: touch; 
-            touch-action: pan-x; 
-        }
-        .metric-btn { white-space: nowrap; padding: 10px 18px; border-radius: 10px; background: var(--gray); border: 1px solid #444; color: #aaa; font-size: 0.8rem; cursor: pointer; flex-shrink: 0; }
-        .metric-btn.active { background: var(--gold); color: #000; font-weight: bold; }
 
-        .year-selector { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; touch-action: pan-x; }
-        .year-btn { padding: 6px 15px; border-radius: 20px; background: var(--gray); border: 1px solid #444; color: #aaa; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
-        .year-btn.active { background: #444; color: var(--gold); border-color: var(--gold); }
-        
-        .select-box { background: var(--card); border: 1px solid #444; padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 0.85rem; margin-bottom: 10px; }
-        .dropdown { display: none; background: var(--card); border: 1px solid #444; border-radius: 10px; padding: 5px; max-height: 400px; overflow-y: auto; position: absolute; width: 90%; max-width: 470px; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        .store-header { background: rgba(212, 175, 55, 0.1); padding: 10px; color: var(--gold); font-weight: bold; font-size: 0.85rem; display: flex; align-items: center; gap: 10px; }
-        .staff-option { padding: 12px 10px 12px 40px; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
-        .chart-card { background: var(--card); border-radius: 15px; padding: 10px; border: 1px solid rgba(212, 175, 55, 0.2); height: 320px; margin-top: 10px; }
-        .stat-card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 10px; border-left: 4px solid var(--gold); box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
-        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; border-top: 1px solid #333; margin-top: 10px; padding-top: 10px;}
-        .triple-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; border-top: 1px solid #333; margin-top: 10px; padding-top: 10px;}
-        .data-label { font-size: 0.6rem; color: #aaa; margin-bottom: 2px; }
-        .data-value { font-size: 1.1rem; color: var(--gold); font-weight: bold; }
-        .data-value.sub { color: #eee; font-size: 0.9rem; }
-        #loading { text-align: center; padding-top: 100px; color: var(--gold); position: fixed; top:0; left:0; width: 100%; height:100%; z-index: 9999; background: var(--bg); }
-        input[type="checkbox"] { transform: scale(1.3); accent-color: var(--gold); }
+        .swiper {
+            width: 100%;
+            height: 100%;
+        }
+
+        .swiper-slide {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .container {
+            width: 94%;
+            max-width: 500px;
+            margin: 10px auto;
+            padding-bottom: 120px;
+        }
+
+        .metric-selector {
+            display: flex;
+            overflow-x: auto;
+            gap: 8px;
+            padding-bottom: 12px;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x;
+        }
+
+        .metric-selector::-webkit-scrollbar,
+        .year-selector::-webkit-scrollbar {
+            display: none;
+        }
+
+        .metric-btn {
+            white-space: nowrap;
+            padding: 10px 18px;
+            border-radius: 10px;
+            background: var(--gray);
+            border: 1px solid #444;
+            color: #aaa;
+            font-size: 0.8rem;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .metric-btn.active {
+            background: var(--gold);
+            color: #000;
+            font-weight: bold;
+        }
+
+        .year-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            overflow-x: auto;
+            padding: 5px 0;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x;
+        }
+
+        .year-btn {
+            padding: 6px 15px;
+            border-radius: 20px;
+            background: var(--gray);
+            border: 1px solid #444;
+            color: #aaa;
+            font-size: 0.8rem;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .year-btn.active {
+            background: #444;
+            color: var(--gold);
+            border-color: var(--gold);
+        }
+
+        .select-box {
+            background: var(--card);
+            border: 1px solid #444;
+            padding: 12px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+
+        .dropdown {
+            display: none;
+            background: var(--card);
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+            position: absolute;
+            width: 90%;
+            max-width: 470px;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        .store-header {
+            background: rgba(212, 175, 55, 0.1);
+            padding: 10px;
+            color: var(--gold);
+            font-weight: bold;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .staff-option {
+            padding: 12px 10px 12px 40px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+
+        .chart-card {
+            background: var(--card);
+            border-radius: 15px;
+            padding: 10px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            height: 320px;
+            margin-top: 10px;
+        }
+
+        .stats-container {
+            margin-top: 12px;
+        }
+
+        .stats-title {
+            margin-bottom: 8px;
+            color: #aaa;
+            font-size: 0.75rem;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--gold);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+
+        .stat-name {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            border-top: 1px solid #333;
+            margin-top: 10px;
+            padding-top: 10px;
+        }
+
+        .triple-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            border-top: 1px solid #333;
+            margin-top: 10px;
+            padding-top: 10px;
+        }
+
+        .data-item {
+            min-width: 0;
+        }
+
+        .data-label {
+            display: block;
+            font-size: 0.6rem;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
+
+        .data-value {
+            display: block;
+            font-size: 1.1rem;
+            color: var(--gold);
+            font-weight: bold;
+            word-break: break-all;
+        }
+
+        .data-value.sub {
+            color: #eee;
+            font-size: 0.9rem;
+        }
+
+        .achievement-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            border-top: 1px solid #333;
+            margin-top: 12px;
+            padding-top: 12px;
+        }
+
+        .achievement-label {
+            color: #aaa;
+            font-size: 0.7rem;
+        }
+
+        .achievement-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 76px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            border: 1px solid #555;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .achievement-high {
+            color: #121212;
+            background: #fff2cc;
+            border-color: var(--gold);
+        }
+
+        .achievement-low {
+            color: #5f1515;
+            background: var(--low);
+            border-color: #d77a7a;
+        }
+
+        .achievement-mid {
+            color: #eee;
+            background: #333;
+            border-color: #555;
+        }
+
+        #loading {
+            text-align: center;
+            padding-top: 100px;
+            color: var(--gold);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            background: var(--bg);
+        }
+
+        input[type="checkbox"] {
+            transform: scale(1.3);
+            accent-color: var(--gold);
+        }
     </style>
 </head>
+
 <body>
 
-<div id="loading"><i class="fas fa-circle-notch fa-spin fa-2x"></i><p id="loading-text">Authenticating...</p></div>
+<div id="loading">
+    <i class="fas fa-circle-notch fa-spin fa-2x"></i>
+    <p id="loading-text">Authenticating...</p>
+</div>
 
 <div class="swiper">
     <div class="swiper-wrapper" id="main-wrapper">
+
+        <!-- =====================================================
+             個人ダッシュボード
+        ====================================================== -->
         <div class="swiper-slide" id="slide-1">
-            <header><img src="logo.png" class="header-logo"><div class="header-title">Staff DashBoards</div></header>
-            <div class="container">
-                <div class="year-selector" id="year-1"></div>
-                <div class="metric-selector">
-                    <button class="metric-btn active" onclick="changeM1('sales',this)">総売上</button>
-                    <button class="metric-btn" onclick="changeM1('shimeiSales',this)">指名売上</button>
-                    <button class="metric-btn" onclick="changeM1('timePrice',this)">時間単価</button>
-                    <button class="metric-btn" onclick="changeM1('shimeiCount',this)">指名客数</button>
-                    <button class="metric-btn" onclick="changeM1('nextReserve',this)">次回予約率</button>
-                    <button class="metric-btn" onclick="changeM1('newRepeat',this)">新規再来率</button>
+            <header>
+                <img src="logo.png" class="header-logo">
+                <div class="header-title">
+                    Staff DashBoards
                 </div>
-                <div class="select-box" onclick="toggleD('drop-1')"><span id="label-1">スタッフを選択</span><i class="fas fa-users"></i></div>
-                <div id="drop-1" class="dropdown"></div>
-                <div class="chart-card"><canvas id="chart-1"></canvas></div>
-                <div class="stats-container"><div class="stats-title" id="title-1">実績</div><div id="cards-1"></div></div>
+            </header>
+
+            <div class="container">
+                <div
+                    class="year-selector"
+                    id="year-1"
+                ></div>
+
+                <div class="metric-selector">
+                    <button
+                        class="metric-btn active"
+                        onclick="changeM1('sales',this)"
+                    >
+                        総売上
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM1('achievementRate',this)"
+                    >
+                        着地予測達成率
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM1('shimeiSales',this)"
+                    >
+                        指名売上
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM1('timePrice',this)"
+                    >
+                        時間単価
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM1('shimeiCount',this)"
+                    >
+                        指名客数
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM1('nextReserve',this)"
+                    >
+                        次回予約率
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM1('newRepeat',this)"
+                    >
+                        新規再来率
+                    </button>
+                </div>
+
+                <div
+                    class="select-box"
+                    onclick="toggleD('drop-1')"
+                >
+                    <span id="label-1">
+                        スタッフを選択
+                    </span>
+
+                    <i class="fas fa-users"></i>
+                </div>
+
+                <div
+                    id="drop-1"
+                    class="dropdown"
+                ></div>
+
+                <div class="chart-card">
+                    <canvas id="chart-1"></canvas>
+                </div>
+
+                <div class="stats-container">
+                    <div
+                        class="stats-title"
+                        id="title-1"
+                    >
+                        実績
+                    </div>
+
+                    <div id="cards-1"></div>
+                </div>
             </div>
         </div>
+
+        <!-- =====================================================
+             材料ダッシュボード
+        ====================================================== -->
         <div class="swiper-slide" id="slide-2">
-            <header><img src="logo.png" class="header-logo"><div class="header-title">Material DashBoards</div></header>
-            <div class="container">
-                <div class="year-selector" id="year-2"></div>
-                <div class="metric-selector">
-                    <button class="metric-btn active" onclick="changeM2('totalRate',this)">全体材料費率</button>
-                    <button class="metric-btn" onclick="changeM2('techRate',this)">技術材料費率</button>
-                    <button class="metric-btn" onclick="changeM2('orderableAmount',this)">注文可能額</button>
-                    <button class="metric-btn" onclick="changeM2('colorRate',this)">カラー材料費率</button>
-                    <button class="metric-btn" onclick="changeM2('treatmentRate',this)">トリートメント率</button>
-                    <button class="metric-btn" onclick="changeM2('permRate',this)">パーマ比率</button>
+            <header>
+                <img src="logo.png" class="header-logo">
+
+                <div class="header-title">
+                    Material DashBoards
                 </div>
-                <div class="select-box" onclick="toggleD('drop-2')"><span id="label-2">店舗を選択</span><i class="fas fa-store"></i></div>
-                <div id="drop-2" class="dropdown"></div>
-                <div class="chart-card"><canvas id="chart-2"></canvas></div>
-                <div class="stats-container" id="cards-2"></div>
+            </header>
+
+            <div class="container">
+                <div
+                    class="year-selector"
+                    id="year-2"
+                ></div>
+
+                <div class="metric-selector">
+                    <button
+                        class="metric-btn active"
+                        onclick="changeM2('totalRate',this)"
+                    >
+                        全体材料費率
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM2('techRate',this)"
+                    >
+                        技術材料費率
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM2('orderableAmount',this)"
+                    >
+                        注文可能額
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM2('colorRate',this)"
+                    >
+                        カラー材料費率
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM2('treatmentRate',this)"
+                    >
+                        トリートメント率
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM2('permRate',this)"
+                    >
+                        パーマ比率
+                    </button>
+                </div>
+
+                <div
+                    class="select-box"
+                    onclick="toggleD('drop-2')"
+                >
+                    <span id="label-2">
+                        店舗を選択
+                    </span>
+
+                    <i class="fas fa-store"></i>
+                </div>
+
+                <div
+                    id="drop-2"
+                    class="dropdown"
+                ></div>
+
+                <div class="chart-card">
+                    <canvas id="chart-2"></canvas>
+                </div>
+
+                <div
+                    class="stats-container"
+                    id="cards-2"
+                ></div>
             </div>
         </div>
+
+        <!-- =====================================================
+             コアメンバーダッシュボード
+        ====================================================== -->
         <div class="swiper-slide" id="slide-3">
-            <header><img src="logo.png" class="header-logo"><div class="header-title">Core members DashBoards</div></header>
-            <div class="container">
-                <div class="year-selector" id="year-3"></div>
-                <div class="metric-selector">
-                    <button class="metric-btn active" onclick="changeM3('storeSales', this)">総売上</button>
-                    <button class="metric-btn" onclick="changeM3('storeAchieveRate', this)">達成率</button>
-                    <button class="metric-btn" onclick="changeM3('storeProfit', this)">店舗利益</button>
-                    <button class="metric-btn" onclick="changeM3('storeTech', this)">技術売上</button>
-                    <button class="metric-btn" onclick="changeM3('storeTenba', this)">店販売上</button>
-                    <button class="metric-btn" onclick="changeM3('storeShimei', this)">指名売上</button>
-                    <button class="metric-btn" onclick="changeM3('storeHourPrice', this)">時間単価</button>
-                    <button class="metric-btn" onclick="changeM3('storeNextRate', this)">次回予約率</button>
-                    <button class="metric-btn" onclick="changeM3('storeAvgPrice', this)">客単価</button>
-                    <button class="metric-btn" onclick="changeM3('storeNewCount', this)">新規客数</button>
-                    <button class="metric-btn" onclick="changeM3('storeNewRepeat', this)">新規再来率</button>
+            <header>
+                <img src="logo.png" class="header-logo">
+
+                <div class="header-title">
+                    Core members DashBoards
                 </div>
-                <div class="select-box" onclick="toggleD('drop-3')"><span id="label-3">店舗を選択</span><i class="fas fa-chart-line"></i></div>
-                <div id="drop-3" class="dropdown"></div>
-                <div class="chart-card"><canvas id="chart-3"></canvas></div>
-                <div class="stats-container" id="cards-3"></div>
+            </header>
+
+                       <header>
+                <img src="logo.png" class="header-logo">
+
+                <div class="header-title <div class="container">
+                <div
+                    class="year-selector"
+                    id="year-3"
+                ></div>
+
+                <div class="metric-selector">
+                    <button
+                        class="metric-btn active"
+                        onclick="changeM3('storeSales',this)"
+                    >
+                        総売上
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM3('storeAchieveRate',this)"
+                    >
+                        達成率
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM3('storeProfit',this)"
+                    >
+                        店舗利益
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM3('storeTech',this)"
+                    >
+                        技術売上
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM3('storeTenba',this)"
+                    >
+                        店販売上
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM3('storeShimei',this)"
+                    >
+                        指名売上
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM3('storeHourPrice',this)"
+                    >
+                        時間単価
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM3('storeNextRate',this)"
+                    >
+                        次回予約率
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM3('storeAvgPrice',this)"
+                    >
+                        客単価
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM3('storeNewCount',this)"
+                    >
+                        新規客数
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM3('storeNewRepeat',this)"
+                    >
+                        新規再来率
+                    </button>
+                </div>
+
+                <div
+                    class="select-box"
+                    onclick="toggleD('drop-3')"
+                >
+                    <span id="label-3">
+                        店舗を選択
+                    </span>
+
+                    <i class="fas fa-chart-line"></i>
+                </div>
+
+                <div
+                    id="drop-3"
+                    class="dropdown"
+                ></div>
+
+                <div class="chart-card">
+                    <canvas id="chart-3"></canvas>
+                </div>
+
+                <div
+                    class="stats-container"
+                    id="cards-3"
+                ></div>
             </div>
         </div>
+
+        <!-- =====================================================
+             代表ダッシュボード
+        ====================================================== -->
         <div class="swiper-slide" id="slide-4">
-            <header><img src="logo.png" class="header-logo"><div class="header-title">Representative DashBoards</div></header>
-            <div class="container">
-                <div class="year-selector" id="year-4"></div>
-                <div class="metric-selector">
-                    <button class="metric-btn active" onclick="changeM4('totalSales',this)">全社売上</button>
-                    <button class="metric-btn" onclick="changeM4('totalSalesRate',this)">売上達成率</button>
-                    <button class="metric-btn" onclick="changeM4('storeProfit',this)">店舗利益計</button>
-                    <button class="metric-btn" onclick="changeM4('storeProfitRate',this)">利益達成率</button>
-                    <button class="metric-btn" onclick="changeM4('companyProfit',this)">全社利益</button>
-                    <button class="metric-btn" onclick="changeM4('companyProfitRate',this)">全社利益達成率</button>
-                    <button class="metric-btn" onclick="changeM4('fcf',this)">FCF</button>
-                    <button class="metric-btn" onclick="changeM4('balance',this)">口座残高</button>
-                    <button class="metric-btn" onclick="changeM4('expense',this)">経費残額</button>
+            <header>
+                <img src="logo.png" class="header-logo">
+
+                <div class="header-title">
+                    Representative DashBoards
                 </div>
-                <div class="chart-card"><canvas id="chart-4"></canvas></div>
-                <div class="stats-container" id="cards-4"></div>
+            </header>
+
+            <div class="container">
+                <div
+                    class="year-selector"
+                    id="year-4"
+                ></div>
+
+                <div class="metric-selector">
+                    <button
+                        class="metric-btn active"
+                        onclick="changeM4('totalSales',this)"
+                    >
+                        全社売上
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM4('totalSalesRate',this)"
+                    >
+                        売上達成率
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM4('storeProfit',this)"
+                    >
+                        店舗利益計
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM4('storeProfitRate',this)"
+                    >
+                        利益達成率
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM4('companyProfit',this)"
+                    >
+                        全社利益
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM4('companyProfitRate',this)"
+                    >
+                        全社利益達成率
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM4('fcf',this)"
+                    >
+                        FCF
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM4('balance',this)"
+                    >
+                        口座残高
+                    </button>
+
+                    <button
+                        class="metric-btn"
+                        onclick="changeM4('expense',this)"
+                    >
+                        経費残額
+                    </button>
+                </div>
+
+                <div class="chart-card">
+                    <canvas id="chart-4"></canvas>
+                </div>
+
+                <div
+                    class="stats-container"
+                    id="cards-4"
+                ></div>
             </div>
         </div>
+
     </div>
+
     <div class="swiper-pagination"></div>
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxAzSojBu5Tjzjge2akg4d_VKGdl6ZCYoEjaRRKiZaRI5DXfFEdkH8MKwW2eI2UgCc/exec";
-    const LIFF_ID = "2009530502-irIiJIX4"; 
-    const COLORS = ['rgba(212,175,55','rgba(52,152,219','rgba(231,76,60','rgba(46,204,113','rgba(155,89,182','rgba(241,196,15','rgba(26,188,156','rgba(230,126,34'];
+    const GAS_URL =
+        "https://script.google.com/macros/s/AKfycbxAzSojBu5Tjzjge2akg4d_VKGdl6ZCYoEjaRRKiZaRI5DXfFEdkH8MKwW2eI2UgCc/exec";
 
-    let allData = null, c1=null, c2=null, c3=null, c4=null, swiperInstance = null;
-    let sK=[], sY=[], sS=[], sA=[], m1='sales', m2='totalRate', m3='storeSales', m4='totalSales';
-    
+    const LIFF_ID =
+        "2009530502-irIiJIX4";
+
+    const COLORS = [
+        'rgba(212,175,55',
+        'rgba(52,152,219',
+        'rgba(231,76,60',
+        'rgba(46,204,113',
+        'rgba(155,89,182',
+        'rgba(241,196,15',
+        'rgba(26,188,156',
+        'rgba(230,126,34'
+    ];
+
+    const MONTH_LABELS = [
+        '1月',
+        '2月',
+        '3月',
+        '4月',
+        '5月',
+        '6月',
+        '7月',
+        '8月',
+        '9月',
+        '10月',
+        '11月',
+        '12月'
+    ];
+
+    let allData = null;
+
+    let c1 = null;
+    let c2 = null;
+    let c3 = null;
+    let c4 = null;
+
+    let swiperInstance = null;
+
+    let sK = [];
+    let sY = [];
+    let sS = [];
+    let sA = [];
+
+    let m1 = 'sales';
+    let m2 = 'totalRate';
+    let m3 = 'storeSales';
+    let m4 = 'totalSales';
+
     const formats = {
-        sales:{u:'￥',s:'',d:0,t:'forecast'}, shimeiSales:{u:'￥',s:'',d:0}, timePrice:{u:'￥',s:'',d:0}, shimeiCount:{u:'',s:'名',d:0}, nextReserve:{u:'',s:'％',d:2}, newRepeat:{u:'',s:'％',d:2},
-        totalRate:{u:'',s:'％',d:2}, techRate:{u:'',s:'％',d:2}, orderableAmount:{u:'￥',s:'',d:0}, colorRate:{u:'',s:'％',d:2}, treatmentRate:{u:'',s:'％',d:2}, permRate:{u:'',s:'％',d:2},
-        storeSales:{u:'￥',s:'',d:0,t:'storeTarget'}, storeAchieveRate:{u:'',s:'％',d:2}, storeProfit:{u:'￥',s:'',d:0,t:'storeProfitTarget'}, storeShimei:{u:'￥',s:'',d:0}, storeTech:{u:'￥',s:'',d:0}, storeTenba:{u:'￥',s:'',d:0}, storeAvgPrice:{u:'￥',s:'',d:0}, storeNewCount:{u:'',s:'名',d:0}, storeHourPrice:{u:'￥',s:'',d:0}, storeNextRate:{u:'',s:'％',d:2}, storeNewRepeat:{u:'',s:'％',d:2},
-        totalSales:{u:'￥',s:'',d:0,t:'totalSalesTarget'}, totalSalesRate:{u:'',s:'％',d:2},
-        storeProfit:{u:'￥',s:'',d:0,t:'storeProfitTarget'}, storeProfitRate:{u:'',s:'％',d:2},
-        companyProfit:{u:'￥',s:'',d:0,t:'companyProfitTarget'}, companyProfitRate:{u:'',s:'％',d:2},
-        fcf:{u:'￥',s:'',d:0,t:'fcfTarget'}, balance:{u:'￥',s:'',d:0,t:'balanceTarget'}, expense:{u:'￥',s:'',d:0}
+        sales: {
+            u: '￥',
+            s: '',
+            d: 0,
+            t: 'targetSales'
+        },
+
+        targetSales: {
+            u: '￥',
+            s: '',
+            d: 0
+        },
+
+        achievementRate: {
+            u: '',
+            s: '％',
+            d: 1
+        },
+
+        shimeiSales: {
+            u: '￥',
+            s: '',
+            d: 0
+        },
+
+        timePrice: {
+            u: '￥',
+            s: '',
+            d: 0
+        },
+
+        shimeiCount: {
+            u: '',
+            s: '名',
+            d: 0
+        },
+
+        nextReserve: {
+            u: '',
+            s: '％',
+            d: 2
+        },
+
+        newRepeat: {
+            u: '',
+            s: '％',
+            d: 2
+        },
+
+        totalRate: {
+            u: '',
+            s: '％',
+            d: 2
+        },
+
+        techRate: {
+            u: '',
+            s: '％',
+            d: 2
+        },
+
+        orderableAmount: {
+            u: '￥',
+            s: '',
+            d: 0
+        },
+
+        colorRate: {
+            u: '',
+            s: '％',
+            d: 2
+        },
+
+        treatmentRate: {
+            u: '',
+            s: '％',
+            d: 2
+        },
+
+        permRate: {
+            u: '',
+            s: '％',
+            d: 2
+        },
+
+        storeSales: {
+            u: '￥',
+            s: '',
+            d: 0,
+            t: 'storeTarget'
+        },
+
+        storeAchieveRate: {
+            u: '',
+            s: '％',
+            d: 2
+        },
+
+        storeProfit: {
+            u: '￥',
+            s: '',
+            d: 0,
+            t: 'storeProfitTarget'
+        },
+
+        storeShimei: {
+            u: '￥',
+            s: '',
+            d: 0
+        },
+
+        storeTech: {
+            u: '￥',
+            s: '',
+            d: 0
+        },
+
+        storeTenba: {
+            u: '￥',
+            s: '',
+            d: 0
+        },
+
+        storeAvgPrice: {
+            u: '￥',
+            s: '',
+            d: 0
+        },
+
+        storeNewCount: {
+            u: '',
+            s: '名',
+            d: 0
+        },
+
+        storeHourPrice: {
+            u: '￥',
+            s: '',
+            d: 0
+        },
+
+        storeNextRate: {
+            u: '',
+            s: '％',
+            d: 2
+        },
+
+        storeNewRepeat: {
+            u: '',
+            s: '％',
+            d: 2
+        },
+
+        totalSales: {
+            u: '￥',
+            s: '',
+            d: 0,
+            t: 'totalSalesTarget'
+        },
+
+        totalSalesRate: {
+            u: '',
+            s: '％',
+            d: 2
+        },
+
+        storeProfitRate: {
+            u: '',
+            s: '％',
+            d: 2
+        },
+
+        companyProfit: {
+            u: '￥',
+            s: '',
+            d: 0,
+            t: 'companyProfitTarget'
+        },
+
+        companyProfitRate: {
+            u: '',
+            s: '％',
+            d: 2
+        },
+
+        fcf: {
+            u: '￥',
+            s: '',
+            d: 0,
+            t: 'fcfTarget'
+        },
+
+        balance: {
+            u: '￥',
+            s: '',
+            d: 0,
+            t: 'balanceTarget'
+        },
+
+        expense: {
+            u: '￥',
+            s: '',
+            d: 0
+        }
     };
 
     window.onload = function() {
-        liff.init({ liffId: LIFF_ID })
-            .then(() => {
-                if (!liff.isLoggedIn()) { liff.login(); } 
-                else { liff.getProfile().then(p => init(p.userId)); }
+        liff
+            .init({
+                liffId: LIFF_ID
             })
-            .catch(err => { document.getElementById('loading-text').innerText = "LIFF Init Error: " + err; });
+            .then(() => {
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+
+                } else {
+                    liff
+                        .getProfile()
+                        .then(profile =>
+                            init(
+                                profile.userId
+                            )
+                        );
+                }
+            })
+            .catch(error => {
+                document
+                    .getElementById(
+                        'loading-text'
+                    )
+                    .innerText =
+                        'LIFF Init Error: ' +
+                        error;
+            });
     };
 
     async function init(userId) {
         try {
-            document.getElementById('loading-text').innerText = "Fetching Data...";
-            const res = await fetch(`${GAS_URL}?userId=${userId}`);
-            allData = await res.json();
-            
-            if (allData.status === 'success') {
-                const level = allData.myInfo.level;
-                const uName = allData.myInfo.userName;
+            document
+                .getElementById(
+                    'loading-text'
+                )
+                .innerText =
+                    'Fetching Data...';
 
-                if (level < 4) { const s = document.getElementById('slide-4'); if(s) s.remove(); }
-                if (level < 3) { const s = document.getElementById('slide-3'); if(s) s.remove(); }
-                if (level < 2) { const s = document.getElementById('slide-2'); if(s) s.remove(); }
+            const response =
+                await fetch(
+                    `${GAS_URL}?userId=${userId}`
+                );
 
-                // Swiper初期化（ケンカ防止設定付き）
-                swiperInstance = new Swiper('.swiper', { 
-                    pagination: { el: '.swiper-pagination', clickable: true },
-                    observer: true, 
-                    observeParents: true, 
-                    threshold: 15, 
-                    resistanceRatio: 0, 
-                    touchStartPreventDefault: false,
-                    // ボタンエリアを触っている時はスワイプさせない
-                    noSwiping: true,
-                    noSwipingClass: 'metric-selector' 
-                });
+            allData =
+                await response.json();
 
-                sY = [allData.yearList[0]];
-                const myInfo = allData.staffList.find(s => s.rawName.replace(/\s+/g, "") === uName);
-                const myStore = myInfo ? myInfo.store : allData.storeList[0];
-                
-                // 個人にチェックだけで始まるように統一（複数店舗所属でも、本人の全店舗分にチェックを入れる）
-                sK = allData.staffList.filter(s => s.rawName.replace(/\s+/g, "") === uName).map(s => s.name);
-                if(sK.length === 0) sK = [allData.staffList[0].name];
-                
-                sS = [myStore]; sA = [myStore];
-
-                renderYears(); renderDrops();
-                await updateM1(); 
-                document.getElementById('loading').style.display = 'none';
-
-                setTimeout(() => {
-                    if(level>=2) updateM2();
-                    if(level>=3) updateM3();
-                    if(level>=4) updateM4();
-                }, 300);
+            if (
+                allData.status !==
+                'success'
+            ) {
+                throw new Error(
+                    allData.message ||
+                    'データ取得に失敗しました。'
+                );
             }
-        } catch (e) { document.getElementById('loading-text').innerText = "Fetch Error: " + e; }
+
+            const level =
+                allData.myInfo.level;
+
+            const userName =
+                allData.myInfo.userName;
+
+            if (level < 4) {
+                const slide =
+                    document
+                        .getElementById(
+                            'slide-4'
+                        );
+
+                if (slide) {
+                    slide.remove();
+                }
+            }
+
+            if (level < 3) {
+                const slide =
+                    document
+                        .getElementById(
+                            'slide-3'
+                        );
+
+                if (slide) {
+                    slide.remove();
+                }
+            }
+
+            if (level < 2) {
+                const slide =
+                    document
+                        .getElementById(
+                            'slide-2'
+                        );
+
+                if (slide) {
+                    slide.remove();
+                }
+            }
+
+            swiperInstance =
+                new Swiper(
+                    '.swiper',
+                    {
+                        pagination: {
+                            el:
+                                '.swiper-pagination',
+
+                            clickable:
+                                true
+                        },
+
+                        observer:
+                            true,
+
+                        observeParents:
+                            true,
+
+                        threshold:
+                            15,
+
+                        resistanceRatio:
+                            0,
+
+                        touchStartPreventDefault:
+                            false,
+
+                        noSwiping:
+                            true,
+
+                        noSwipingClass:
+                            'metric-selector'
+                    }
+                );
+
+            sY = [
+                allData.yearList[0]
+            ];
+
+            const myInfo =
+                allData.staffList
+                    .find(staff =>
+                        staff.rawName
+                            .replace(
+                                /\s+/g,
+                                ''
+                            ) ===
+                        userName
+                    );
+
+            const myStore =
+                myInfo
+                    ? myInfo.store
+                    : allData.storeList[0];
+
+            sK =
+                allData.staffList
+                    .filter(staff =>
+                        staff.rawName
+                            .replace(
+                                /\s+/g,
+                                ''
+                            ) ===
+                        userName
+                    )
+                    .map(staff =>
+                        staff.name
+                    );
+
+            if (
+                sK.length === 0 &&
+                allData.staffList.length > 0
+            ) {
+                sK = [
+                    allData
+                        .staffList[0]
+                        .name
+                ];
+            }
+
+            sS = myStore
+                ? [myStore]
+                : [];
+
+            sA = myStore
+                ? [myStore]
+                : [];
+
+            renderYears();
+            renderDrops();
+
+            await updateM1();
+
+            document
+                .getElementById(
+                    'loading'
+                )
+                .style
+                .display =
+                    'none';
+
+            setTimeout(() => {
+                if (level >= 2) {
+                    updateM2();
+                }
+
+                if (level >= 3) {
+                    updateM3();
+                }
+
+                if (level >= 4) {
+                    updateM4();
+                }
+            }, 300);
+
+        } catch (error) {
+            document
+                .getElementById(
+                    'loading-text'
+                )
+                .innerText =
+                    'Fetch Error: ' +
+                    error;
+        }
     }
 
-    function getF(v, m) { const f = formats[m] || {u:'',s:'',d:0}; let dv = Number(v); if (f.s === '％') dv *= 100; return f.u + dv.toLocaleString(undefined,{minimumFractionDigits:f.d, maximumFractionDigits:f.d}) + f.s; }
-    function renderYears() { const h = allData.yearList.map(y => `<button class="year-btn ${sY.includes(y)?'active':''}" onclick="toggleY('${y}')">${y}年</button>`).join(''); ['1','2','3','4'].forEach(i => { if(document.getElementById('year-'+i)) document.getElementById('year-'+i).innerHTML = h; }); }
-    async function toggleY(y) { if (sY.includes(y)) { if(sY.length>1) sY = sY.filter(x=>x!==y); } else { sY.push(y); } sY.sort().reverse(); renderYears(); const lv = allData.myInfo.level; const tasks = []; if(lv>=1) tasks.push(updateM1()); if(lv>=2) tasks.push(updateM2()); if(lv>=3) tasks.push(updateM3()); if(lv>=4) tasks.push(updateM4()); await Promise.all(tasks); }
-    function toggleD(id) { const el=document.getElementById(id); el.style.display=el.style.display==='block'?'none':'block'; }
-    function renderDrops() {
-        let h1 = ""; allData.storeList.forEach(st => {
-            h1 += `<div class="store-header"><input type="checkbox" id="ps-${st}" onchange="tSStore('${st}',this)"><label for="ps-${st}">${st} (全員選ぶ)</label></div>`;
-            allData.staffList.filter(s=>s.store===st).forEach(s=>{ h1 += `<div class="staff-option"><input type="checkbox" class="s-chk" data-store="${st}" value="${s.name}" ${sK.includes(s.name)?'checked':''} onchange="hSChange()"><label onclick="this.previousElementSibling.click()">${s.name}</label></div>`; });
+    function getF(value, metric) {
+        const format =
+            formats[metric] || {
+                u: '',
+                s: '',
+                d: 0
+            };
+
+        let displayValue =
+            Number(value) || 0;
+
+        if (
+            format.s === '％'
+        ) {
+            displayValue *= 100;
+        }
+
+        return (
+            format.u +
+            displayValue
+                .toLocaleString(
+                    undefined,
+                    {
+                        minimumFractionDigits:
+                            format.d,
+
+                        maximumFractionDigits:
+                            format.d
+                    }
+                ) +
+            format.s
+        );
+    }
+
+    function getAchievementClass(
+        rate,
+        hasTarget
+    ) {
+        if (!hasTarget) {
+            return 'achievement-mid';
+        }
+
+        const number =
+            Number(rate) || 0;
+
+        if (number >= 1) {
+            return 'achievement-high';
+        }
+
+        if (number <= 0.9) {
+            return 'achievement-low';
+        }
+
+        return 'achievement-mid';
+    }
+
+    function getAchievementText(
+        rate,
+        hasTarget
+    ) {
+        if (!hasTarget) {
+            return '未設定';
+        }
+
+        return getF(
+            rate,
+            'achievementRate'
+        );
+    }
+
+    function renderYears() {
+        const html =
+            allData.yearList
+                .map(year =>
+                    `<button
+                        class="year-btn ${sY.includes(year) ? 'active' : ''}"
+                        onclick="toggleY('${year}')"
+                    >
+                        ${year}年
+                    </button>`
+                )
+                .join('');
+
+        [
+            '1',
+            '2',
+            '3',
+            '4'
+        ].forEach(index => {
+            const element =
+                document
+                    .getElementById(
+                        'year-' + index
+                    );
+
+            if (element) {
+                element.innerHTML =
+                    html;
+            }
         });
-        if(document.getElementById('drop-1')) document.getElementById('drop-1').innerHTML = h1;
-        if(document.getElementById('drop-2')) document.getElementById('drop-2').innerHTML = allData.storeList.map(st => `<div class="store-header"><input type="checkbox" class="m-chk" value="${st}" ${sS.includes(st)?'checked':''} onchange="hMChange()"><label onclick="this.previousElementSibling.click()">${st}</label></div>`).join('');
-        if(document.getElementById('drop-3')) document.getElementById('drop-3').innerHTML = allData.storeList.map(st => `<div class="store-header"><input type="checkbox" class="a-chk" value="${st}" ${sA.includes(st)?'checked':''} onchange="hAChange()"><label onclick="this.previousElementSibling.click()">${st}</label></div>`).join('');
+    }
+
+    async function toggleY(year) {
+        if (sY.includes(year)) {
+            if (sY.length > 1) {
+                sY =
+                    sY.filter(
+                        item =>
+                            item !== year
+                    );
+            }
+
+        } else {
+            sY.push(year);
+        }
+
+        sY
+            .sort()
+            .reverse();
+
+        renderYears();
+
+        const level =
+            allData.myInfo.level;
+
+        const tasks = [];
+
+        if (level >= 1) {
+            tasks.push(
+                updateM1()
+            );
+        }
+
+        if (level >= 2) {
+            tasks.push(
+                updateM2()
+            );
+        }
+
+        if (level >= 3) {
+            tasks.push(
+                updateM3()
+            );
+        }
+
+        if (level >= 4) {
+            tasks.push(
+                updateM4()
+            );
+        }
+
+        await Promise.all(tasks);
+    }
+
+    function toggleD(id) {
+        const element =
+            document
+                .getElementById(id);
+
+        element.style.display =
+            element.style.display ===
+                'block'
+                ? 'none'
+                : 'block';
+    }
+
+    function renderDrops() {
+        let staffHtml = '';
+
+        allData.storeList
+            .forEach(store => {
+                staffHtml +=
+                    `<div class="store-header">
+                        <input
+                            type="checkbox"
+                            id="ps-${store}"
+                            onchange="tSStore('${store}',this)"
+                        >
+
+                        <label for="ps-${store}">
+                            ${store}（全員選ぶ）
+                        </label>
+                    </div>`;
+
+                allData.staffList
+                    .filter(staff =>
+                        staff.store ===
+                        store
+                    )
+                    .forEach(staff => {
+                        staffHtml +=
+                            `<div class="staff-option">
+                                <input
+                                    type="checkbox"
+                                    class="s-chk"
+                                    data-store="${store}"
+                                    value="${staff.name}"
+                                    ${sK.includes(staff.name) ? 'checked' : ''}
+                                    onchange="hSChange()"
+                                >
+
+                                <label
+                                    onclick="this.previousElementSibling.click()"
+                                >
+                                    ${staff.name}
+                                </label>
+                            </div>`;
+                    });
+            });
+
+        const staffDrop =
+            document
+                .getElementById(
+                    'drop-1'
+                );
+
+        if (staffDrop) {
+            staffDrop.innerHTML =
+                staffHtml;
+        }
+
+        const materialDrop =
+            document
+                .getElementById(
+                    'drop-2'
+                );
+
+        if (materialDrop) {
+            materialDrop.innerHTML =
+                allData.storeList
+                    .map(store =>
+                        `<div class="store-header">
+                            <input
+                                type="checkbox"
+                                class="m-chk"
+                                value="${store}"
+                                ${sS.includes(store) ? 'checked' : ''}
+                                onchange="hMChange()"
+                            >
+
+                            <label
+                                onclick="this.previousElementSibling.click()"
+                            >
+                                ${store}
+                            </label>
+                        </div>`
+                    )
+                    .join('');
+        }
+
+        const analysisDrop =
+            document
+                .getElementById(
+                    'drop-3'
+                );
+
+        if (analysisDrop) {
+            analysisDrop.innerHTML =
+                allData.storeList
+                    .map(store =>
+                        `<div class="store-header">
+                            <input
+                                type="checkbox"
+                                class="a-chk"
+                                value="${store}"
+                                ${sA.includes(store) ? 'checked' : ''}
+                                onchange="hAChange()"
+                            >
+
+                            <label
+                                onclick="this.previousElementSibling.click()"
+                            >
+                                ${store}
+                            </label>
+                        </div>`
+                    )
+                    .join('');
+        }
+
         updateLabels();
     }
-    function tSStore(s, el) { document.querySelectorAll(`.s-chk[data-store="${s}"]`).forEach(c=>c.checked=el.checked); hSChange(); }
-    function hSChange() { sK = Array.from(document.querySelectorAll('.s-chk:checked')).map(c=>c.value); updateLabels(); updateM1(); }
-    function hMChange() { sS = Array.from(document.querySelectorAll('.m-chk:checked')).map(c=>c.value); updateLabels(); updateM2(); }
-    function hAChange() { sA = Array.from(document.querySelectorAll('.a-chk:checked')).map(c=>c.value); updateLabels(); updateM3(); }
-    function updateLabels() { if(document.getElementById('label-1')) document.getElementById('label-1').innerText = sK.length + "名を選択中"; if(document.getElementById('label-2')) document.getElementById('label-2').innerText = sS.length + "店舗を選択中"; if(document.getElementById('label-3')) document.getElementById('label-3').innerText = sA.length + "店舗を選択中"; }
-    function changeM1(m,b) { document.querySelectorAll('#slide-1 .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m1=m; updateM1(); }
-    function changeM2(m,b) { document.querySelectorAll('#slide-2 .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m2=m; updateM2(); }
-    function changeM3(m,b) { document.querySelectorAll('#slide-3 .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m3=m; updateM3(); }
-    function changeM4(m,b) { document.querySelectorAll('#slide-4 .metric-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); m4=m; updateM4(); }
 
-    async function updateM1() {
-        const ctx = document.getElementById('chart-1').getContext('2d'); if(c1) c1.destroy();
-        const ds = []; sK.forEach((key, i) => {
-            const base = COLORS[i % COLORS.length];
-            sY.forEach((y, yIdx) => {
-                const color = `${base}, ${Math.max(1-(yIdx*0.4),0.2)})`;
-                ds.push({ label:`${key}(${y})`, data: allData.chartData[y]?.[key]?.[m1] || new Array(12).fill(0), borderColor:color, backgroundColor:color, borderWidth:yIdx===0?3:1.5, pointRadius:yIdx===0?4:2, pointHitRadius:30, tension:0.3, fill:false });
+    function tSStore(
+        store,
+        element
+    ) {
+        document
+            .querySelectorAll(
+                `.s-chk[data-store="${store}"]`
+            )
+            .forEach(checkBox => {
+                checkBox.checked =
+                    element.checked;
             });
-        });
-        c1 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{ y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{callback:v=>getF(v,m1), color:'#aaa', font:{size:9}}}}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+getF(c.parsed.y,m1)}}}}});
-        const yr = sY[0]; const mo = new Date().getMonth();
-        document.getElementById('cards-1').innerHTML = sK.map((n,i) => {
-            const v = allData.chartData[yr]?.[n]?.[m1]?.[mo] || 0;
-            const f = allData.chartData[yr]?.[n]?.['forecast']?.[mo] || 0;
-            const c = `${COLORS[i % COLORS.length]}, 1)`;
-            if(m1==='sales') return `<div class="stat-card" style="border-left-color:${c}"><span class="stat-name">${n}</span><div class="comparison-grid"><div class="data-item"><span class="data-label">予測</span><span class="data-value sub">${getF(f,'sales')}</span></div><div class="data-item"><span class="data-label">実績</span><span class="data-value">${getF(v,m1)}</span></div></div></div>`;
-            return `<div class="stat-card" style="border-left-color:${c}"><div class="stat-row"><span class="stat-name">${n}</span><span class="data-value">${getF(v,m1)}</span></div></div>`;
-        }).join('');
+
+        hSChange();
     }
-    
-    async function updateM2() {
-        const ctx = document.getElementById('chart-2').getContext('2d'); if(c2) c2.destroy();
-        const ds = []; sS.forEach((key, i) => {
-            const base = COLORS[i % COLORS.length];
-            sY.forEach((y, yIdx) => {
-                const color = `${base}, ${Math.max(1-(yIdx*0.4),0.2)})`;
-                ds.push({ label:`${key}(${y})`, data: allData.materialData[y]?.[key]?.[m2] || new Array(12).fill(0), borderColor:color, backgroundColor:color, borderWidth:yIdx===0?3:1.5, pointRadius:yIdx===0?4:2, pointHitRadius:30, tension:0.3, fill:false });
+
+    function hSChange() {
+        sK =
+            Array
+                .from(
+                    document
+                        .querySelectorAll(
+                            '.s-chk:checked'
+                        )
+                )
+                .map(checkBox =>
+                    checkBox.value
+                );
+
+        updateLabels();
+        updateM1();
+    }
+
+    function hMChange() {
+        sS =
+            Array
+                .from(
+                    document
+                        .querySelectorAll(
+                            '.m-chk:checked'
+                        )
+                )
+                .map(checkBox =>
+                    checkBox.value
+                );
+
+        updateLabels();
+        updateM2();
+    }
+
+    function hAChange() {
+        sA =
+            Array
+                .from(
+                    document
+                        .querySelectorAll(
+                            '.a-chk:checked'
+                        )
+                )
+                .map(checkBox =>
+                    checkBox.value
+                );
+
+        updateLabels();
+        updateM3();
+    }
+
+    function updateLabels() {
+        const label1 =
+            document
+                .getElementById(
+                    'label-1'
+                );
+
+        const label2 =
+            document
+                .getElementById(
+                    'label-2'
+                );
+
+        const label3 =
+            document
+                .getElementById(
+                    'label-3'
+                );
+
+        if (label1) {
+            label1.innerText =
+                `${sK.length}名を選択中`;
+        }
+
+        if (label2) {
+            label2.innerText =
+                `${sS.length}店舗を選択中`;
+        }
+
+        if (label3) {
+            label3.innerText =
+                `${sA.length}店舗を選択中`;
+        }
+    }
+
+    function changeM1(
+        metric,
+        button
+    ) {
+        document
+            .querySelectorAll(
+                '#slide-1 .metric-btn'
+            )
+            .forEach(element =>
+                element.classList
+                    .remove('active')
+            );
+
+        button.classList.add(
+            'active'
+        );
+
+        m1 = metric;
+
+        updateM1();
+    }
+
+    function changeM2(
+        metric,
+        button
+    ) {
+        document
+            .querySelectorAll(
+                '#slide-2 .metric-btn'
+            )
+            .forEach(element =>
+                element.classList
+                    .remove('active')
+            );
+
+        button.classList.add(
+            'active'
+        );
+
+        m2 = metric;
+
+        updateM2();
+    }
+
+    function changeM3(
+        metric,
+        button
+    ) {
+        document
+            .querySelectorAll(
+                '#slide-3 .metric-btn'
+            )
+            .forEach(element =>
+                element.classList
+                    .remove('active')
+            );
+
+        button.classList.add(
+            'active'
+        );
+
+        m3 = metric;
+
+        updateM3();
+    }
+
+    function changeM4(
+        metric,
+        button
+    ) {
+        document
+            .querySelectorAll(
+                '#slide-4 .metric-btn'
+            )
+            .forEach(element =>
+                element.classList
+                    .remove('active')
+            );
+
+        button.classList.add(
+            'active'
+        );
+
+        m4 = metric;
+
+        updateM4();
+    }
+
+    /**
+     * 個人ダッシュボード
+     *
+     * 総売上：
+     * ・実績を実線
+     * ・目標売上を破線
+     * ・カードに目標、着地予測、実績、達成率
+     *
+     * 着地予測達成率：
+     * ・達成率の推移
+     * ・100%ライン
+     * ・90%ライン
+     */
+    async function updateM1() {
+        const canvas =
+            document
+                .getElementById(
+                    'chart-1'
+                );
+
+        if (!canvas) {
+            return;
+        }
+
+        const context =
+            canvas.getContext('2d');
+
+        if (c1) {
+            c1.destroy();
+        }
+
+        const datasets = [];
+
+        sK.forEach(
+            (staffKey, staffIndex) => {
+                const baseColor =
+                    COLORS[
+                        staffIndex %
+                        COLORS.length
+                    ];
+
+                sY.forEach(
+                    (year, yearIndex) => {
+                        const opacity =
+                            Math.max(
+                                1 -
+                                yearIndex * 0.4,
+                                0.2
+                            );
+
+                        const color =
+                            `${baseColor}, ${opacity})`;
+
+                        const staffData =
+                            allData
+                                .chartData[year]
+                                ?.[staffKey] || {};
+
+                        let metricData =
+                            staffData[m1] ||
+                            new Array(12)
+                                .fill(0);
+
+                        // 目標未設定月は達成率の点を表示しない
+                        if (
+                            m1 ===
+                            'achievementRate'
+                        ) {
+                            const targetData =
+                                staffData
+                                    .targetSales ||
+                                new Array(12)
+                                    .fill(0);
+
+                            metricData =
+                                metricData.map(
+                                    (
+                                        value,
+                                        monthIndex
+                                    ) =>
+                                        Number(
+                                            targetData[
+                                                monthIndex
+                                            ]
+                                        ) > 0
+                                            ? value
+                                            : null
+                                );
+                        }
+
+                        datasets.push({
+                            label:
+                                m1 === 'sales'
+                                    ? `${staffKey}(${year}) 実績`
+                                    : `${staffKey}(${year})`,
+
+                            data:
+                                metricData,
+
+                            borderColor:
+                                color,
+
+                            backgroundColor:
+                                color,
+
+                            borderWidth:
+                                yearIndex === 0
+                                    ? 3
+                                    : 1.5,
+
+                            pointRadius:
+                                yearIndex === 0
+                                    ? 4
+                                    : 2,
+
+                            pointHitRadius:
+                                30,
+
+                            tension:
+                                0.3,
+
+                            fill:
+                                false
+                        });
+
+                        // 最新選択年の目標売上を破線で表示
+                        if (
+                            m1 === 'sales' &&
+                            yearIndex === 0
+                        ) {
+                            const targetData =
+                                staffData
+                                    .targetSales ||
+                                new Array(12)
+                                    .fill(0);
+
+                            if (
+                                targetData.some(
+                                    value =>
+                                        Number(value) > 0
+                                )
+                            ) {
+                                datasets.push({
+                                    label:
+                                        `${staffKey}(${year}) 目標`,
+
+                                    data:
+                                        targetData,
+
+                                    borderColor:
+                                        `${baseColor}, 0.45)`,
+
+                                    backgroundColor:
+                                        `${baseColor}, 0.45)`,
+
+                                    borderWidth:
+                                        2,
+
+                                    borderDash:
+                                        [5, 5],
+
+                                    pointRadius:
+                                        0,
+
+                                    pointHitRadius:
+                                        20,
+
+                                    tension:
+                                        0.3,
+
+                                    fill:
+                                        false
+                                });
+                            }
+                        }
+                    }
+                );
+            }
+        );
+
+        // 達成率グラフの基準線
+        if (
+            m1 ===
+            'achievementRate'
+        ) {
+            datasets.push({
+                label:
+                    '達成ライン 100%',
+
+                data:
+                    new Array(12)
+                        .fill(1),
+
+                borderColor:
+                    'rgba(212,175,55,0.9)',
+
+                backgroundColor:
+                    'rgba(212,175,55,0.9)',
+
+                borderWidth:
+                    2,
+
+                borderDash:
+                    [6, 5],
+
+                pointRadius:
+                    0,
+
+                pointHitRadius:
+                    0,
+
+                fill:
+                    false
             });
-        });
-        
-        // 目安ラインの追加（技術材料費率の場合のみ）
-        if (m2 === 'techRate') {
-            ds.push({
-                label: '目安ライン(7.5%)',
-                data: new Array(12).fill(0.075),
-                borderColor: 'rgba(255, 99, 132, 0.8)',
-                borderWidth: 2,
-                borderDash: [5, 5],
-                pointRadius: 0,
-                fill: false
+
+            datasets.push({
+                label:
+                    '注意ライン 90%',
+
+                data:
+                    new Array(12)
+                        .fill(0.9),
+
+                borderColor:
+                    'rgba(231,76,60,0.75)',
+
+                backgroundColor:
+                    'rgba(231,76,60,0.75)',
+
+                borderWidth:
+                    1.5,
+
+                borderDash:
+                    [4, 4],
+
+                pointRadius:
+                    0,
+
+                pointHitRadius:
+                    0,
+
+                fill:
+                    false
             });
         }
 
-        c2 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{ y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{callback:v=>getF(v,m2), color:'#aaa', font:{size:9}}}}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+getF(c.parsed.y,m2)}}}}});
-        const yr = sY[0]; const mo = new Date().getMonth();
-        document.getElementById('cards-2').innerHTML = sS.map((st,i) => `<div class="stat-card" style="border-left-color:${COLORS[i % COLORS.length]},1)"><div class="stat-row"><span class="stat-name">${st}</span><span class="data-value">${getF(allData.materialData[yr]?.[st]?.[m2]?.[mo]||0,m2)}</span></div></div>`).join('');
-    }
-    
-    async function updateM3() {
-        const ctx = document.getElementById('chart-3').getContext('2d'); if(c3) c3.destroy();
-        const ds = []; sA.forEach((key, i) => {
-            const base = COLORS[i % COLORS.length];
-            sY.forEach((y, yIdx) => {
-                const color = `${base}, ${Math.max(1-(yIdx*0.4),0.2)})`;
-                ds.push({ label:`${key}(${y})`, data: allData.storeAnalysisData[y]?.[key]?.[m3] || new Array(12).fill(0), borderColor:color, backgroundColor:color, borderWidth:yIdx===0?3:1.5, pointRadius:yIdx===0?4:2, pointHitRadius:30, tension:0.3, fill:false });
-                
-                // コアメンバーダッシュボード：目標値のラインを追加
-                const format = formats[m3];
-                if (format && format.t && yIdx === 0) {
-                    const targetData = allData.storeAnalysisData[y]?.[key]?.[format.t] || new Array(12).fill(0);
-                    if (targetData.some(v => v > 0)) {
-                        ds.push({ 
-                            label:`${key}(${y}) 目標`, 
-                            data: targetData, 
-                            borderColor: `${base}, 0.5)`,
-                            borderWidth: 2, 
-                            borderDash: [5,5], 
-                            pointRadius: 0, 
-                            tension: 0.3, 
-                            fill: false 
-                        });
+        c1 =
+            new Chart(
+                context,
+                {
+                    type:
+                        'line',
+
+                    data: {
+                        labels:
+                            MONTH_LABELS,
+
+                        datasets:
+                            datasets
+                    },
+
+                    options: {
+                        responsive:
+                            true,
+
+                        maintainAspectRatio:
+                            false,
+
+                        interaction: {
+                            mode:
+                                'index',
+
+                            intersect:
+                                false
+                        },
+
+                        scales: {
+                            y: {
+                                suggestedMin:
+                                    m1 ===
+                                    'achievementRate'
+                                        ? 0.5
+                                        : undefined,
+
+                                suggestedMax:
+                                    m1 ===
+                                    'achievementRate'
+                                        ? 1.2
+                                        : undefined,
+
+                                grid: {
+                                    color:
+                                        'rgba(255,255,255,0.05)'
+                                },
+
+                                ticks: {
+                                    callback:
+                                        value =>
+                                            getF(
+                                                value,
+                                                m1
+                                            ),
+
+                                    color:
+                                        '#aaa',
+
+                                    font: {
+                                        size:
+                                            9
+                                    }
+                                }
+                            }
+                        },
+
+                        plugins: {
+                            legend: {
+                                display:
+                                    false
+                            },
+
+                            tooltip: {
+                                callbacks: {
+                                    label:
+                                        context =>
+                                            context
+                                                .dataset
+                                                .label +
+                                            ': ' +
+                                            getF(
+                                                context
+                                                    .parsed
+                                                    .y,
+                                                m1
+                                            )
+                                }
+                            }
+                        }
                     }
                 }
-            });
-        });
-        c3 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{ y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{callback:v=>getF(v,m3), color:'#aaa', font:{size:9}}}}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+getF(c.parsed.y,m3)}}}}});
-        const yr = sY[0]; const mo = new Date().getMonth();
-        document.getElementById('cards-3').innerHTML = sA.map((st,i) => {
-            const v = allData.storeAnalysisData[yr]?.[st]?.[m3]?.[mo] || 0;
-            const t = allData.storeAnalysisData[yr]?.[st]?.['storeTarget']?.[mo] || 0;
-            const c = `${COLORS[i % COLORS.length]}, 1)`;
-            
-            if(m3==='storeSales' || m3==='storeProfit') {
-                const tKey = formats[m3].t;
-                const tTarget = allData.storeAnalysisData[yr]?.[st]?.[tKey]?.[mo] || 0;
-                return `<div class="stat-card" style="border-left-color:${c}"><span class="stat-name">${st}</span><div class="comparison-grid"><div class="data-item"><span class="data-label">目標</span><span class="data-value sub">${getF(tTarget,m3)}</span></div><div class="data-item"><span class="data-label">実績</span><span class="data-value">${getF(v,m3)}</span></div></div></div>`;
-            }
-            return `<div class="stat-card" style="border-left-color:${c}"><div class="stat-row"><span class="stat-name">${st}</span><span class="data-value">${getF(v,m3)}</span></div></div>`;
-        }).join('');
+            );
+
+        const selectedYear =
+            sY[0];
+
+        const currentMonthIndex =
+            new Date()
+                .getMonth();
+
+        const cardsHtml =
+            sK.map(
+                (
+                    staffName,
+                    staffIndex
+                ) => {
+                    const staffData =
+                        allData
+                            .chartData[
+                                selectedYear
+                            ]
+                            ?.[staffName] || {};
+
+                    const actualSales =
+                        staffData.sales
+                            ?.[currentMonthIndex] ||
+                        0;
+
+                    const forecastSales =
+                        staffData.forecast
+                            ?.[currentMonthIndex] ||
+                        0;
+
+                    const targetSales =
+                        staffData.targetSales
+                            ?.[currentMonthIndex] ||
+                        0;
+
+                    const achievementRate =
+                        staffData
+                            .achievementRate
+                            ?.[currentMonthIndex] ||
+                        0;
+
+                    const currentValue =
+                        staffData[m1]
+                            ?.[currentMonthIndex] ||
+                        0;
+
+                    const cardColor =
+                        `${
+                            COLORS[
+                                staffIndex %
+                                COLORS.length
+                            ]
+                        }, 1)`;
+
+                    const hasTarget =
+                        Number(
+                            targetSales
+                        ) > 0;
+
+                    const achievementClass =
+                        getAchievementClass(
+                            achievementRate,
+                            hasTarget
+                        );
+
+                    const achievementText =
+                        getAchievementText(
+                            achievementRate,
+                            hasTarget
+                        );
+
+                    if (
+                        m1 === 'sales'
+                    ) {
+                        return `
+                            <div
+                                class="stat-card"
+                                style="border-left-color:${cardColor}"
+                            >
+                                <span class="stat-name">
+                                    ${staffName}
+                                </span>
+
+                                <div class="triple-grid">
+                                    <div class="data-item">
+                                        <span class="data-label">
+                                            目標
+                                        </span>
+
+                                        <span class="data-value sub">
+                                            ${getF(
+                                                targetSales,
+                                                'sales'
+                                            )}
+                                        </span>
+                                    </div>
+
+                                    <div class="data-item">
+                                        <span class="data-label">
+                                            着地予測
+                                        </span>
+
+                                        <span class="data-value sub">
+                                            ${getF(
+                                                forecastSales,
+                                                'sales'
+                                            )}
+                                        </span>
+                                    </div>
+
+                                    <div class="data-item">
+                                        <span class="data-label">
+                                            実績
+                                        </span>
+
+                                        <span class="data-value">
+                                            ${getF(
+                                                actualSales,
+                                                'sales'
+                                            )}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="achievement-row">
+                                    <span class="achievement-label">
+                                        着地予測達成率
+                                    </span>
+
+                                    <span
+                                        class="achievement-badge ${achievementClass}"
+                                    >
+                                        ${achievementText}
+                                    </span>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    if (
+                        m1 ===
+                        'achievementRate'
+                    ) {
+                        return `
+                            <div
+                                class="stat-card"
+                                style="border-left-color:${cardColor}"
+                            >
+                                <div class="stat-row">
+                                    <span class="stat-name">
+                                        ${staffName}
+                                    </span>
+
+                                    <span
+                                        class="achievement-badge ${achievementClass}"
+                                    >
+                                        ${achievementText}
+                                    </span>
+                                </div>
+
+                                <div class="comparison-grid">
+                                    <div class="data-item">
+                                        <span class="data-label">
+                                            目標売上
+                                        </span>
+
+                                        <span class="data-value sub">
+                                            ${getF(
+                                                targetSales,
+                                                'sales'
+                                            )}
+                                        </span>
+                                    </div>
+
+                                    <div class="data-item">
+                                        <span class="data-label">
+                                            着地予測売上
+                                        </span>
+
+                                        <span class="data-value">
+                                            ${getF(
+                                                forecastSales,
+                                                'sales'
+                                            )}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    return `
+                        <div
+                            class="stat-card"
+                            style="border-left-color:${cardColor}"
+                        >
+                            <div class="stat-row">
+                                <span class="stat-name">
+                                    ${staffName}
+                                </span>
+
+                                <span class="data-value">
+                                    ${getF(
+                                        currentValue,
+                                        m1
+                                    )}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }
+            )
+            .join('');
+
+        document
+            .getElementById(
+                'cards-1'
+            )
+            .innerHTML =
+                cardsHtml;
     }
-    
+
+    async function updateM2() {
+        const canvas =
+            document
+                .getElementById(
+                    'chart-2'
+                );
+
+        if (!canvas) {
+            return;
+        }
+
+        const context =
+            canvas.getContext('2d');
+
+        if (c2) {
+            c2.destroy();
+        }
+
+        const datasets = [];
+
+        sS.forEach(
+            (store, storeIndex) => {
+                const baseColor =
+                    COLORS[
+                        storeIndex %
+                        COLORS.length
+                    ];
+
+                sY.forEach(
+                    (year, yearIndex) => {
+                        const color =
+                            `${baseColor}, ${
+                                Math.max(
+                                    1 -
+                                    yearIndex * 0.4,
+                                    0.2
+                                )
+                            })`;
+
+                        datasets.push({
+                            label:
+                                `${store}(${year})`,
+
+                            data:
+                                allData
+                                    .materialData[
+                                        year
+                                    ]
+                                    ?.[store]
+                                    ?.[m2] ||
+                                new Array(12)
+                                    .fill(0),
+
+                            borderColor:
+                                color,
+
+                            backgroundColor:
+                                color,
+
+                            borderWidth:
+                                yearIndex === 0
+                                    ? 3
+                                    : 1.5,
+
+                            pointRadius:
+                                yearIndex === 0
+                                    ? 4
+                                    : 2,
+
+                            pointHitRadius:
+                                30,
+
+                            tension:
+                                0.3,
+
+                            fill:
+                                false
+                        });
+                    }
+                );
+            }
+        );
+
+        if (
+            m2 === 'techRate'
+        ) {
+            datasets.push({
+                label:
+                    '目安ライン（7.5%）',
+
+                data:
+                    new Array(12)
+                        .fill(0.075),
+
+                borderColor:
+                    'rgba(255,99,132,0.8)',
+
+                borderWidth:
+                    2,
+
+                borderDash:
+                    [5, 5],
+
+                pointRadius:
+                    0,
+
+                fill:
+                    false
+            });
+        }
+
+        c2 =
+            new Chart(
+                context,
+                {
+                    type:
+                        'line',
+
+                    data: {
+                        labels:
+                            MONTH_LABELS,
+
+                        datasets:
+                            datasets
+                    },
+
+                    options: {
+                        responsive:
+                            true,
+
+                        maintainAspectRatio:
+                            false,
+
+                        interaction: {
+                            mode:
+                                'index',
+
+                            intersect:
+                                false
+                        },
+
+                        scales: {
+                            y: {
+                                grid: {
+                                    color:
+                                        'rgba(255,255,255,0.05)'
+                                },
+
+                                ticks: {
+                                    callback:
+                                        value =>
+                                            getF(
+                                                value,
+                                                m2
+                                            ),
+
+                                    color:
+                                        '#aaa',
+
+                                    font: {
+                                        size:
+                                            9
+                                    }
+                                }
+                            }
+                        },
+
+                        plugins: {
+                            legend: {
+                                display:
+                                    false
+                            },
+
+                            tooltip: {
+                                callbacks: {
+                                    label:
+                                        context =>
+                                            context
+                                                .dataset
+                                                .label +
+                                            ': ' +
+                                            getF(
+                                                context
+                                                    .parsed
+                                                    .y,
+                                                m2
+                                            )
+                                }
+                            }
+                        }
+                    }
+                }
+            );
+
+        const year =
+            sY[0];
+
+        const monthIndex =
+            new Date()
+                .getMonth();
+
+        document
+            .getElementById(
+                'cards-2'
+            )
+            .innerHTML =
+                sS.map(
+                    (
+                        store,
+                        index
+                    ) =>
+                        `<div
+                            class="stat-card"
+                            style="border-left-color:${
+                                COLORS[
+                                    index %
+                                    COLORS.length
+                                ]
+                            },1)"
+                        >
+                            <div class="stat-row">
+                                <span class="stat-name">
+                                    ${store}
+                                </span>
+
+                                <span class="data-value">
+                                    ${getF(
+                                        allData
+                                            .materialData[
+                                                year
+                                            ]
+                                            ?.[store]
+                                            ?.[m2]
+                                            ?.[monthIndex] ||
+                                        0,
+                                        m2
+                                    )}
+                                </span>
+                            </div>
+                        </div>`
+                )
+                .join('');
+    }
+
+    async function updateM3() {
+        const canvas =
+            document
+                .getElementById(
+                    'chart-3'
+                );
+
+        if (!canvas) {
+            return;
+        }
+
+        const context =
+            canvas.getContext('2d');
+
+        if (c3) {
+            c3.destroy();
+        }
+
+        const datasets = [];
+
+        sA.forEach(
+            (store, storeIndex) => {
+                const baseColor =
+                    COLORS[
+                        storeIndex %
+                        COLORS.length
+                    ];
+
+                sY.forEach(
+                    (year, yearIndex) => {
+                        const color =
+                            `${baseColor}, ${
+                                Math.max(
+                                    1 -
+                                    yearIndex * 0.4,
+                                    0.2
+                                )
+                            })`;
+
+                        datasets.push({
+                            label:
+                                `${store}(${year})`,
+
+                            data:
+                                allData
+                                    .storeAnalysisData[
+                                        year
+                                    ]
+                                    ?.[store]
+                                    ?.[m3] ||
+                                new Array(12)
+                                    .fill(0),
+
+                            borderColor:
+                                color,
+
+                            backgroundColor:
+                                color,
+
+                            borderWidth:
+                                yearIndex === 0
+                                    ? 3
+                                    : 1.5,
+
+                            pointRadius:
+                                yearIndex === 0
+                                    ? 4
+                                    : 2,
+
+                            pointHitRadius:
+                                30,
+
+                            tension:
+                                0.3,
+
+                            fill:
+                                false
+                        });
+
+                        const format =
+                            formats[m3];
+
+                        if (
+                            format &&
+                            format.t &&
+                            yearIndex === 0
+                        ) {
+                            const targetData =
+                                allData
+                                    .storeAnalysisData[
+                                        year
+                                    ]
+                                    ?.[store]
+                                    ?.[format.t] ||
+                                new Array(12)
+                                    .fill(0);
+
+                            if (
+                                targetData.some(
+                                    value =>
+                                        value > 0
+                                )
+                            ) {
+                                datasets.push({
+                                    label:
+                                        `${store}(${year}) 目標`,
+
+                                    data:
+                                        targetData,
+
+                                    borderColor:
+                                        `${baseColor}, 0.5)`,
+
+                                    borderWidth:
+                                        2,
+
+                                    borderDash:
+                                        [5, 5],
+
+                                    pointRadius:
+                                        0,
+
+                                    tension:
+                                        0.3,
+
+                                    fill:
+                                        false
+                                });
+                            }
+                        }
+                    }
+                );
+            }
+        );
+
+        c3 =
+            new Chart(
+                context,
+                {
+                    type:
+                        'line',
+
+                    data: {
+                        labels:
+                            MONTH_LABELS,
+
+                        datasets:
+                            datasets
+                    },
+
+                    options: {
+                        responsive:
+                            true,
+
+                        maintainAspectRatio:
+                            false,
+
+                        interaction: {
+                            mode:
+                                'index',
+
+                            intersect:
+                                false
+                        },
+
+                        scales: {
+                            y: {
+                                grid: {
+                                    color:
+                                        'rgba(255,255,255,0.05)'
+                                },
+
+                                ticks: {
+                                    callback:
+                                        value =>
+                                            getF(
+                                                value,
+                                                m3
+                                            ),
+
+                                    color:
+                                        '#aaa',
+
+                                    font: {
+                                        size:
+                                            9
+                                    }
+                                }
+                            }
+                        },
+
+                        plugins: {
+                            legend: {
+                                display:
+                                    false
+                            },
+
+                            tooltip: {
+                                callbacks: {
+                                    label:
+                                        context =>
+                                            context
+                                                .dataset
+                                                .label +
+                                            ': ' +
+                                            getF(
+                                                context
+                                                    .parsed
+                                                    .y,
+                                                m3
+                                            )
+                                }
+                            }
+                        }
+                    }
+                }
+            );
+
+        const year =
+            sY[0];
+
+        const monthIndex =
+            new Date()
+                .getMonth();
+
+        document
+            .getElementById(
+                'cards-3'
+            )
+            .innerHTML =
+                sA.map(
+                    (
+                        store,
+                        index
+                    ) => {
+                        const value =
+                            allData
+                                .storeAnalysisData[
+                                    year
+                                ]
+                                ?.[store]
+                                ?.[m3]
+                                ?.[monthIndex] ||
+                            0;
+
+                        const cardColor =
+                            `${
+                                COLORS[
+                                    index %
+                                    COLORS.length
+                                ]
+                            }, 1)`;
+
+                        if (
+                            m3 ===
+                                'storeSales' ||
+                            m3 ===
+                                'storeProfit'
+                        ) {
+                            const targetKey =
+                                formats[m3].t;
+
+                            const targetValue =
+                                allData
+                                    .storeAnalysisData[
+                                        year
+                                    ]
+                                    ?.[store]
+                                    ?.[targetKey]
+                                    ?.[monthIndex] ||
+                                0;
+
+                            return `
+                                <div
+                                    class="stat-card"
+                                    style="border-left-color:${cardColor}"
+                                >
+                                    <span class="stat-name">
+                                        ${store}
+                                    </span>
+
+                                    <div class="comparison-grid">
+                                        <div class="data-item">
+                                            <span class="data-label">
+                                                目標
+                                            </span>
+
+                                            <span class="data-value sub">
+                                                ${getF(
+                                                    targetValue,
+                                                    m3
+                                                )}
+                                            </span>
+                                        </div>
+
+                                        <div class="data-item">
+                                            <span class="data-label">
+                                                実績
+                                            </span>
+
+                                            <span class="data-value">
+                                                ${getF(
+                                                    value,
+                                                    m3
+                                                )}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        return `
+                            <div
+                                class="stat-card"
+                                style="border-left-color:${cardColor}"
+                            >
+                                <div class="stat-row">
+                                    <span class="stat-name">
+                                        ${store}
+                                    </span>
+
+                                    <span class="data-value">
+                                        ${getF(
+                                            value,
+                                            m3
+                                        )}
+                                    </span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                )
+                .join('');
+    }
+
     async function updateM4() {
-        const ctx = document.getElementById('chart-4').getContext('2d'); if(c4) c4.destroy();
-        const ds = []; const yr = sY[0]; const d = allData.companyData[yr]; const f = formats[m4];
-        if(m4==='expense') { [['nakazonoB','中園B','#d4af37'],['sawaragiB','椹木B','#3498db'],['egawaB','江川B','#e74c3c']].forEach(p => { ds.push({ label:p[1], data:d[p[0]], borderColor:p[2], borderWidth:2, pointRadius:3, pointHitRadius:30, tension:0.3, fill:false }); }); }
-        else { ds.push({ label:'実績', data:d[m4], borderColor:'rgba(212,175,55,1)', borderWidth:3, pointRadius:4, pointHitRadius:30, tension:0.3, fill:false }); if(f.t) ds.push({ label:'目標', data:d[f.t], borderColor:'rgba(255,255,255,0.3)', borderWidth:2, borderDash:[5,5], pointRadius:0, tension:0.3, fill:false }); }
-        c4 = new Chart(ctx, { type:'line', data:{ labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets:ds }, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{callback:v=>getF(v,m4),color:'#aaa',font:{size:9}}}}, plugins:{legend:{display:true,labels:{color:'#fff',font:{size:9}}}, tooltip:{callbacks:{label:c=>c.dataset.label+ ': ' + getF(c.parsed.y, m4)}}}}});
-        const mo = new Date().getMonth();
-        if(m4==='expense') { document.getElementById('cards-4').innerHTML = `<div class="stat-card"><span class="stat-name">経費残額</span><div class="triple-grid"><div class="data-item"><span class="data-label">中園B</span><span class="data-value sub">${getF(d.nakazonoB[mo],'expense')}</span></div><div class="data-item"><span class="data-label">椹木B</span><span class="data-value sub">${getF(d.sawaragiB[mo],'expense')}</span></div><div class="data-item"><span class="data-label">江川B</span><span class="data-value sub">${getF(d.egawaB[mo],'expense')}</span></div></div></div>`; }
-        else { const v = d[m4][mo]; const t = f.t ? d[f.t][mo] : 0; document.getElementById('cards-4').innerHTML = `<div class="stat-card"> ${f.t ? `<div class="comparison-grid"><div class="data-item"><span class="data-label">目標</span><span class="data-value sub">${getF(t,m4)}</span></div><div class="data-item"><span class="data-label">実績</span><span class="data-value">${getF(v,m4)}</span></div></div>` : `<div class="stat-row"><span class="stat-name">実績</span><span class="data-value">${getF(v,m4)}</span></div>`} </div>`; }
+        const canvas =
+            document
+                .getElementById(
+                    'chart-4'
+                );
+
+        if (!canvas) {
+            return;
+        }
+
+        const context =
+            canvas.getContext('2d');
+
+        if (c4) {
+            c4.destroy();
+        }
+
+        const datasets = [];
+
+        const year =
+            sY[0];
+
+        const data =
+            allData.companyData[year];
+
+        if (!data) {
+            return;
+        }
+
+        const format =
+            formats[m4];
+
+        if (
+            m4 === 'expense'
+        ) {
+            [
+                [
+                    'nakazonoB',
+                    '中園B',
+                    '#d4af37'
+                ],
+                [
+                    'sawaragiB',
+                    '椹木B',
+                    '#3498db'
+                ],
+                [
+                    'egawaB',
+                    '江川B',
+                    '#e74c3c'
+                ]
+            ].forEach(item => {
+                datasets.push({
+                    label:
+                        item[1],
+
+                    data:
+                        data[item[0]],
+
+                    borderColor:
+                        item[2],
+
+                    borderWidth:
+                        2,
+
+                    pointRadius:
+                        3,
+
+                    pointHitRadius:
+                        30,
+
+                    tension:
+                        0.3,
+
+                    fill:
+                        false
+                });
+            });
+
+        } else {
+            datasets.push({
+                label:
+                    '実績',
+
+                data:
+                    data[m4],
+
+                borderColor:
+                    'rgba(212,175,55,1)',
+
+                borderWidth:
+                    3,
+
+                pointRadius:
+                    4,
+
+                pointHitRadius:
+                    30,
+
+                tension:
+                    0.3,
+
+                fill:
+                    false
+            });
+
+            if (
+                format &&
+                format.t
+            ) {
+                datasets.push({
+                    label:
+                        '目標',
+
+                    data:
+                        data[format.t],
+
+                    borderColor:
+                        'rgba(255,255,255,0.3)',
+
+                    borderWidth:
+                        2,
+
+                    borderDash:
+                        [5, 5],
+
+                    pointRadius:
+                        0,
+
+                    tension:
+                        0.3,
+
+                    fill:
+                        false
+                });
+            }
+        }
+
+        c4 =
+            new Chart(
+                context,
+                {
+                    type:
+                        'line',
+
+                    data: {
+                        labels:
+                            MONTH_LABELS,
+
+                        datasets:
+                            datasets
+                    },
+
+                    options: {
+                        responsive:
+                            true,
+
+                        maintainAspectRatio:
+                            false,
+
+                        interaction: {
+                            mode:
+                                'index',
+
+                            intersect:
+                                false
+                        },
+
+                        scales: {
+                            y: {
+                                grid: {
+                                    color:
+                                        'rgba(255,255,255,0.05)'
+                                },
+
+                                ticks: {
+                                    callback:
+                                        value =>
+                                            getF(
+                                                value,
+                                                m4
+                                            ),
+
+                                    color:
+                                        '#aaa',
+
+                                    font: {
+                                        size:
+                                            9
+                                    }
+                                }
+                            }
+                        },
+
+                        plugins: {
+                            legend: {
+                                display:
+                                    true,
+
+                                labels: {
+                                    color:
+                                        '#fff',
+
+                                    font: {
+                                        size:
+                                            9
+                                    }
+                                }
+                            },
+
+                            tooltip: {
+                                callbacks: {
+                                    label:
+                                        context =>
+                                            context
+                                                .dataset
+                                                .label +
+                                            ': ' +
+                                            getF(
+                                                context
+                                                    .parsed
+                                                    .y,
+                                                m4
+                                            )
+                                }
+                            }
+                        }
+                    }
+                }
+            );
+
+        const monthIndex =
+            new Date()
+                .getMonth();
+
+        if (
+            m4 === 'expense'
+        ) {
+            document
+                .getElementById(
+                    'cards-4'
+                )
+                .innerHTML =
+                    `<div class="stat-card">
+                        <span class="stat-name">
+                            経費残額
+                        </span>
+
+                        <div class="triple-grid">
+                            <div class="data-item">
+                                <span class="data-label">
+                                    中園B
+                                </span>
+
+                                <span class="data-value sub">
+                                    ${getF(
+                                        data.nakazonoB[
+                                            monthIndex
+                                        ],
+                                        'expense'
+                                    )}
+                                </span>
+                            </div>
+
+                            <div class="data-item">
+                                <span class="data-label">
+                                    椹木B
+                                </span>
+
+                                <span class="data-value sub">
+                                    ${getF(
+                                        data.sawaragiB[
+                                            monthIndex
+                                        ],
+                                        'expense'
+                                    )}
+                                </span>
+                            </div>
+
+                            <div class="data-item">
+                                <span class="data-label">
+                                    江川B
+                                </span>
+
+                                <span class="data-value sub">
+                                    ${getF(
+                                        data.egawaB[
+                                            monthIndex
+                                        ],
+                                        'expense'
+                                    )}
+                                </span>
+                            </div>
+                        </div>
+                    </div>`;
+
+        } else {
+            const value =
+                data[m4][monthIndex];
+
+            const target =
+                format && format.t
+                    ? data[format.t][
+                        monthIndex
+                    ]
+                    : 0;
+
+            document
+                .getElementById(
+                    'cards-4'
+                )
+                .innerHTML =
+                    `<div class="stat-card">
+                        ${
+                            format &&
+                            format.t
+                                ? `<div class="comparison-grid">
+                                    <div class="data-item">
+                                        <span class="data-label">
+                                            目標
+                                        </span>
+
+                                        <span class="data-value sub">
+                                            ${getF(
+                                                target,
+                                                m4
+                                            )}
+                                        </span>
+                                    </div>
+
+                                    <div class="data-item">
+                                        <span class="data-label">
+                                            実績
+                                        </span>
+
+                                        <span class="data-value">
+                                            ${getF(
+                                                value,
+                                                m4
+                                            )}
+                                        </span>
+                                    </div>
+                                </div>`
+                                : `<div class="stat-row">
+                                    <span class="stat-name">
+                                        実績
+                                    </span>
+
+                                    <span class="data-value">
+                                        ${getF(
+                                            value,
+                                            m4
+                                        )}
+                                    </span>
+                                </div>`
+                        }
+                    </div>`;
+        }
     }
 </script>
+
 </body>
 </html>
