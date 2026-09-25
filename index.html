@@ -1708,56 +1708,6 @@
                                 false
                         });
 
-                        // 最新選択年の目標売上を破線で表示
-                        if (
-                            m1 === 'sales' &&
-                            yearIndex === 0
-                        ) {
-                            const targetData =
-                                staffData
-                                    .targetSales ||
-                                new Array(12)
-                                .fill(null);
-
-                            if (
-                                targetData.some(
-                                    value =>
-                                        Number(value) > 0
-                                )
-                            ) {
-                                datasets.push({
-                                    label:
-                                        `${staffKey}(${year}) 目標`,
-
-                                    data:
-                                        targetData,
-
-                                    borderColor:
-                                        `${baseColor}, 0.45)`,
-
-                                    backgroundColor:
-                                        `${baseColor}, 0.45)`,
-
-                                    borderWidth:
-                                        2,
-
-                                    borderDash:
-                                        [5, 5],
-
-                                    pointRadius:
-                                        0,
-
-                                    pointHitRadius:
-                                        20,
-
-                                    tension:
-                                        0.3,
-
-                                    fill:
-                                        false
-                                });
-                            }
-                        }
                     }
                 );
             }
@@ -2319,57 +2269,6 @@
                                 false
                         });
 
-                        const format =
-                            formats[m3];
-
-                        if (
-                            format &&
-                            format.t &&
-                            yearIndex === 0
-                        ) {
-                            const targetData =
-                                allData
-                                    .storeAnalysisData[
-                                        year
-                                    ]
-                                    ?.[store]
-                                    ?.[format.t] ||
-                                new Array(12)
-                                .fill(null);
-
-                            if (
-                                targetData.some(
-                                    value =>
-                                        value > 0
-                                )
-                            ) {
-                                datasets.push({
-                                    label:
-                                        `${store}(${year}) 目標`,
-
-                                    data:
-                                        targetData,
-
-                                    borderColor:
-                                        `${baseColor}, 0.5)`,
-
-                                    borderWidth:
-                                        2,
-
-                                    borderDash:
-                                        [5, 5],
-
-                                    pointRadius:
-                                        0,
-
-                                    tension:
-                                        0.3,
-
-                                    fill:
-                                        false
-                                });
-                            }
-                        }
                     }
                 );
             }
@@ -2546,9 +2445,6 @@
             return;
         }
 
-        const format =
-            formats[m4];
-
         if (
             m4 === 'expense'
         ) {
@@ -2623,36 +2519,6 @@
                     false
             });
 
-            if (
-                format &&
-                format.t
-            ) {
-                datasets.push({
-                    label:
-                        '目標',
-
-                    data:
-                        data[format.t],
-
-                    borderColor:
-                        'rgba(255,255,255,0.3)',
-
-                    borderWidth:
-                        2,
-
-                    borderDash:
-                        [5, 5],
-
-                    pointRadius:
-                        0,
-
-                    tension:
-                        0.3,
-
-                    fill:
-                        false
-                });
-            }
         }
 
         c4 =
@@ -2824,18 +2690,17 @@
                 .innerHTML =
                     `<div class="stat-card">
                         <div class="stat-row">
-                                    <span class="stat-name">
-                                        実績
-                                    </span>
+                            <span class="stat-name">
+                                実績
+                            </span>
 
-                                    <span class="data-value">
-                                        ${getF(
-                                            value,
-                                            m4
-                                        )}
-                                    </span>
-                                </div>`
-                        }
+                            <span class="data-value">
+                                ${getF(
+                                    value,
+                                    m4
+                                )}
+                            </span>
+                        </div>
                     </div>`;
         }
     }
