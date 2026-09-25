@@ -298,51 +298,6 @@
             font-size: 0.9rem;
         }
 
-        .achievement-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            border-top: 1px solid #333;
-            margin-top: 12px;
-            padding-top: 12px;
-        }
-
-        .achievement-label {
-            color: #aaa;
-            font-size: 0.7rem;
-        }
-
-        .achievement-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 76px;
-            padding: 7px 12px;
-            border-radius: 999px;
-            border: 1px solid #555;
-            font-size: 0.9rem;
-            font-weight: bold;
-        }
-
-        .achievement-high {
-            color: #121212;
-            background: #fff2cc;
-            border-color: var(--gold);
-        }
-
-        .achievement-low {
-            color: #5f1515;
-            background: var(--low);
-            border-color: #d77a7a;
-        }
-
-        .achievement-mid {
-            color: #eee;
-            background: #333;
-            border-color: #555;
-        }
-
         #loading {
             text-align: center;
             padding-top: 100px;
@@ -396,13 +351,6 @@
                         onclick="changeM1('sales',this)"
                     >
                         総売上
-                    </button>
-
-                    <button
-                        class="metric-btn"
-                        onclick="changeM1('achievementRate',this)"
-                    >
-                        着地予測達成率
                     </button>
 
                     <button
@@ -594,13 +542,6 @@
 
                     <button
                         class="metric-btn"
-                        onclick="changeM3('storeAchieveRate',this)"
-                    >
-                        達成率
-                    </button>
-
-                    <button
-                        class="metric-btn"
                         onclick="changeM3('storeProfit',this)"
                     >
                         店舗利益
@@ -718,13 +659,6 @@
 
                     <button
                         class="metric-btn"
-                        onclick="changeM4('totalSalesRate',this)"
-                    >
-                        売上達成率
-                    </button>
-
-                    <button
-                        class="metric-btn"
                         onclick="changeM4('storeProfit',this)"
                     >
                         店舗利益計
@@ -732,23 +666,9 @@
 
                     <button
                         class="metric-btn"
-                        onclick="changeM4('storeProfitRate',this)"
-                    >
-                        利益達成率
-                    </button>
-
-                    <button
-                        class="metric-btn"
                         onclick="changeM4('companyProfit',this)"
                     >
                         全社利益
-                    </button>
-
-                    <button
-                        class="metric-btn"
-                        onclick="changeM4('companyProfitRate',this)"
-                    >
-                        全社利益達成率
                     </button>
 
                     <button
@@ -845,20 +765,7 @@
         sales: {
             u: '￥',
             s: '',
-            d: 0,
-            t: 'targetSales'
-        },
-
-        targetSales: {
-            u: '￥',
-            s: '',
             d: 0
-        },
-
-        achievementRate: {
-            u: '',
-            s: '％',
-            d: 1
         },
 
         shimeiSales: {
@@ -930,21 +837,13 @@
         storeSales: {
             u: '￥',
             s: '',
-            d: 0,
-            t: 'storeTarget'
-        },
-
-        storeAchieveRate: {
-            u: '',
-            s: '％',
-            d: 2
+            d: 0
         },
 
         storeProfit: {
             u: '￥',
             s: '',
-            d: 0,
-            t: 'storeProfitTarget'
+            d: 0
         },
 
         storeShimei: {
@@ -998,47 +897,25 @@
         totalSales: {
             u: '￥',
             s: '',
-            d: 0,
-            t: 'totalSalesTarget'
-        },
-
-        totalSalesRate: {
-            u: '',
-            s: '％',
-            d: 2
-        },
-
-        storeProfitRate: {
-            u: '',
-            s: '％',
-            d: 2
+            d: 0
         },
 
         companyProfit: {
             u: '￥',
             s: '',
-            d: 0,
-            t: 'companyProfitTarget'
-        },
-
-        companyProfitRate: {
-            u: '',
-            s: '％',
-            d: 2
+            d: 0
         },
 
         fcf: {
             u: '￥',
             s: '',
-            d: 0,
-            t: 'fcfTarget'
+            d: 0
         },
 
         balance: {
             u: '￥',
             s: '',
-            d: 0,
-            t: 'balanceTarget'
+            d: 0
         },
 
         expense: {
@@ -1334,47 +1211,6 @@
                     }
                 ) +
             format.s
-        );
-    }
-
-    function getAchievementClass(
-        rate,
-        hasTarget
-    ) {
-        if (
-            !hasTarget ||
-            rate === null ||
-            rate === undefined ||
-            !Number.isFinite(Number(rate))
-        ) {
-            return 'achievement-mid';
-        }
-
-        const number =
-            Number(rate);
-
-        if (number >= 1) {
-            return 'achievement-high';
-        }
-
-        if (number <= 0.9) {
-            return 'achievement-low';
-        }
-
-        return 'achievement-mid';
-    }
-
-    function getAchievementText(
-        rate,
-        hasTarget
-    ) {
-        if (!hasTarget) {
-            return '未設定';
-        }
-
-        return getF(
-            rate,
-            'achievementRate'
         );
     }
 
@@ -1784,14 +1620,8 @@
      * 個人ダッシュボード
      *
      * 総売上：
-     * ・実績を実線
-     * ・目標売上を破線
-     * ・カードに目標、着地予測、実績、達成率
-     *
-     * 着地予測達成率：
-     * ・達成率の推移
-     * ・100%ライン
-     * ・90%ライン
+     * ・実績推移を表示
+     * ・カードに今月の実績と着地予測を表示
      */
     async function updateM1() {
         const canvas =
@@ -1842,33 +1672,6 @@
                             staffData[m1] ||
                             new Array(12)
                                 .fill(null);
-
-                        // 目標未設定月は達成率の点を表示しない
-                        if (
-                            m1 ===
-                            'achievementRate'
-                        ) {
-                            const targetData =
-                                staffData
-                                    .targetSales ||
-                                new Array(12)
-                                .fill(null);
-
-                            metricData =
-                                metricData.map(
-                                    (
-                                        value,
-                                        monthIndex
-                                    ) =>
-                                        Number(
-                                            targetData[
-                                                monthIndex
-                                            ]
-                                        ) > 0
-                                            ? value
-                                            : null
-                                );
-                        }
 
                         datasets.push({
                             label:
@@ -1960,72 +1763,6 @@
             }
         );
 
-        // 達成率グラフの基準線
-        if (
-            m1 ===
-            'achievementRate'
-        ) {
-            datasets.push({
-                label:
-                    '達成ライン 100%',
-
-                data:
-                    new Array(12)
-                        .fill(1),
-
-                borderColor:
-                    'rgba(212,175,55,0.9)',
-
-                backgroundColor:
-                    'rgba(212,175,55,0.9)',
-
-                borderWidth:
-                    2,
-
-                borderDash:
-                    [6, 5],
-
-                pointRadius:
-                    0,
-
-                pointHitRadius:
-                    0,
-
-                fill:
-                    false
-            });
-
-            datasets.push({
-                label:
-                    '注意ライン 90%',
-
-                data:
-                    new Array(12)
-                        .fill(0.9),
-
-                borderColor:
-                    'rgba(231,76,60,0.75)',
-
-                backgroundColor:
-                    'rgba(231,76,60,0.75)',
-
-                borderWidth:
-                    1.5,
-
-                borderDash:
-                    [4, 4],
-
-                pointRadius:
-                    0,
-
-                pointHitRadius:
-                    0,
-
-                fill:
-                    false
-            });
-        }
-
         c1 =
             new Chart(
                 context,
@@ -2058,18 +1795,6 @@
 
                         scales: {
                             y: {
-                                suggestedMin:
-                                    m1 ===
-                                    'achievementRate'
-                                        ? 0.5
-                                        : undefined,
-
-                                suggestedMax:
-                                    m1 ===
-                                    'achievementRate'
-                                        ? 1.2
-                                        : undefined,
-
                                 grid: {
                                     color:
                                         'rgba(255,255,255,0.05)'
@@ -2149,15 +1874,6 @@
                         staffData.forecast
                             ?.[currentMonthIndex] ?? null;
 
-                    const targetSales =
-                        staffData.targetSales
-                            ?.[currentMonthIndex] ?? null;
-
-                    const achievementRate =
-                        staffData
-                            .achievementRate
-                            ?.[currentMonthIndex] ?? null;
-
                     const currentValue =
                         staffData[m1]
                             ?.[currentMonthIndex] ?? null;
@@ -2169,23 +1885,6 @@
                                 COLORS.length
                             ]
                         }, 1)`;
-
-                    const hasTarget =
-                        Number(
-                            targetSales
-                        ) > 0;
-
-                    const achievementClass =
-                        getAchievementClass(
-                            achievementRate,
-                            hasTarget
-                        );
-
-                    const achievementText =
-                        getAchievementText(
-                            achievementRate,
-                            hasTarget
-                        );
 
                     if (
                         m1 === 'sales'
@@ -2199,15 +1898,15 @@
                                     ${staffName}
                                 </span>
 
-                                <div class="triple-grid">
+                                <div class="comparison-grid">
                                     <div class="data-item">
                                         <span class="data-label">
-                                            目標
+                                            実績
                                         </span>
 
-                                        <span class="data-value sub">
+                                        <span class="data-value">
                                             ${getF(
-                                                targetSales,
+                                                actualSales,
                                                 'sales'
                                             )}
                                         </span>
@@ -2225,89 +1924,12 @@
                                             )}
                                         </span>
                                     </div>
-
-                                    <div class="data-item">
-                                        <span class="data-label">
-                                            実績
-                                        </span>
-
-                                        <span class="data-value">
-                                            ${getF(
-                                                actualSales,
-                                                'sales'
-                                            )}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div class="achievement-row">
-                                    <span class="achievement-label">
-                                        着地予測達成率
-                                    </span>
-
-                                    <span
-                                        class="achievement-badge ${achievementClass}"
-                                    >
-                                        ${achievementText}
-                                    </span>
                                 </div>
                             </div>
                         `;
                     }
 
-                    if (
-                        m1 ===
-                        'achievementRate'
-                    ) {
-                        return `
-                            <div
-                                class="stat-card"
-                                style="border-left-color:${cardColor}"
-                            >
-                                <div class="stat-row">
-                                    <span class="stat-name">
-                                        ${staffName}
-                                    </span>
-
-                                    <span
-                                        class="achievement-badge ${achievementClass}"
-                                    >
-                                        ${achievementText}
-                                    </span>
-                                </div>
-
-                                <div class="comparison-grid">
-                                    <div class="data-item">
-                                        <span class="data-label">
-                                            目標売上
-                                        </span>
-
-                                        <span class="data-value sub">
-                                            ${getF(
-                                                targetSales,
-                                                'sales'
-                                            )}
-                                        </span>
-                                    </div>
-
-                                    <div class="data-item">
-                                        <span class="data-label">
-                                            着地予測売上
-                                        </span>
-
-                                        <span class="data-value">
-                                            ${getF(
-                                                forecastSales,
-                                                'sales'
-                                            )}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }
-
-                    return `
+                    return 
                         <div
                             class="stat-card"
                             style="border-left-color:${cardColor}"
@@ -2870,64 +2492,6 @@
                                 ]
                             }, 1)`;
 
-                        if (
-                            m3 ===
-                                'storeSales' ||
-                            m3 ===
-                                'storeProfit'
-                        ) {
-                            const targetKey =
-                                formats[m3].t;
-
-                            const targetValue =
-                                allData
-                                    .storeAnalysisData[
-                                        year
-                                    ]
-                                    ?.[store]
-                                    ?.[targetKey]
-                                    ?.[monthIndex] ?? null;
-
-                            return `
-                                <div
-                                    class="stat-card"
-                                    style="border-left-color:${cardColor}"
-                                >
-                                    <span class="stat-name">
-                                        ${store}
-                                    </span>
-
-                                    <div class="comparison-grid">
-                                        <div class="data-item">
-                                            <span class="data-label">
-                                                目標
-                                            </span>
-
-                                            <span class="data-value sub">
-                                                ${getF(
-                                                    targetValue,
-                                                    m3
-                                                )}
-                                            </span>
-                                        </div>
-
-                                        <div class="data-item">
-                                            <span class="data-label">
-                                                実績
-                                            </span>
-
-                                            <span class="data-value">
-                                                ${getF(
-                                                    value,
-                                                    m3
-                                                )}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        }
-
                         return `
                             <div
                                 class="stat-card"
@@ -3253,50 +2817,13 @@
             const value =
                 data[m4][monthIndex];
 
-            const target =
-                format && format.t
-                    ? data[format.t][
-                        monthIndex
-                    ]
-                    : null;
-
             document
                 .getElementById(
                     'cards-4'
                 )
                 .innerHTML =
                     `<div class="stat-card">
-                        ${
-                            format &&
-                            format.t
-                                ? `<div class="comparison-grid">
-                                    <div class="data-item">
-                                        <span class="data-label">
-                                            目標
-                                        </span>
-
-                                        <span class="data-value sub">
-                                            ${getF(
-                                                target,
-                                                m4
-                                            )}
-                                        </span>
-                                    </div>
-
-                                    <div class="data-item">
-                                        <span class="data-label">
-                                            実績
-                                        </span>
-
-                                        <span class="data-value">
-                                            ${getF(
-                                                value,
-                                                m4
-                                            )}
-                                        </span>
-                                    </div>
-                                </div>`
-                                : `<div class="stat-row">
+                        <div class="stat-row">
                                     <span class="stat-name">
                                         実績
                                     </span>
