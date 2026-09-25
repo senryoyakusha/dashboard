@@ -1668,7 +1668,7 @@
                                 .chartData[year]
                                 ?.[staffKey] || {};
 
-                        let metricData =
+                        const metricData =
                             staffData[m1] ||
                             new Array(12)
                                 .fill(null);
@@ -1879,7 +1879,7 @@
                         `;
                     }
 
-                    return 
+                    return `
                         <div
                             class="stat-card"
                             style="border-left-color:${cardColor}"
