@@ -8,7 +8,7 @@
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     >
 
-    <title>Management Dashboard 2026</title>
+    <title>Management Dashboard</title>
 
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -790,8 +790,8 @@
 </div>
 
 <script>
-    const GAS_URL =
-        "https://script.google.com/macros/s/AKfycbxAzSojBu5Tjzjge2akg4d_VKGdl6ZCYoEjaRRKiZaRI5DXfFEdkH8MKwW2eI2UgCc/exec";
+    const OS_API_URL =
+        "https://os.senryoyakusha.com/api/integrations/dashboard/read";
 
     const LIFF_ID =
         "2009530502-irIiJIX4";
@@ -1056,16 +1056,19 @@
             .then(() => {
                 if (!liff.isLoggedIn()) {
                     liff.login();
-
-                } else {
-                    liff
-                        .getProfile()
-                        .then(profile =>
-                            init(
-                                profile.userId
-                            )
-                        );
+                    return;
                 }
+
+                const accessToken =
+                    liff.getAccessToken();
+
+                if (!accessToken) {
+                    throw new Error(
+                        'LIFF access token is unavailable.'
+                    );
+                }
+
+                return init(accessToken);
             })
             .catch(error => {
                 document
@@ -1078,7 +1081,7 @@
             });
     };
 
-    async function init(userId) {
+    async function init(accessToken) {
         try {
             document
                 .getElementById(
@@ -1089,8 +1092,26 @@
 
             const response =
                 await fetch(
-                    `${GAS_URL}?userId=${userId}`
+                    OS_API_URL,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type':
+                                'application/json'
+                        },
+                        body:
+                            JSON.stringify({
+                                accessToken
+                            })
+                    }
                 );
+
+            if (!response.ok) {
+                throw new Error(
+                    'OS API HTTP ' +
+                    response.status
+                );
+            }
 
             allData =
                 await response.json();
@@ -1281,8 +1302,17 @@
                 d: 0
             };
 
+        if (
+            value === null ||
+            value === undefined ||
+            value === '' ||
+            !Number.isFinite(Number(value))
+        ) {
+            return '—';
+        }
+
         let displayValue =
-            Number(value) || 0;
+            Number(value);
 
         if (
             format.s === '％'
@@ -1806,7 +1836,7 @@
                         let metricData =
                             staffData[m1] ||
                             new Array(12)
-                                .fill(0);
+                                .fill(null);
 
                         // 目標未設定月は達成率の点を表示しない
                         if (
@@ -1817,7 +1847,7 @@
                                 staffData
                                     .targetSales ||
                                 new Array(12)
-                                    .fill(0);
+                                .fill(null);
 
                             metricData =
                                 metricData.map(
@@ -1879,7 +1909,7 @@
                                 staffData
                                     .targetSales ||
                                 new Array(12)
-                                    .fill(0);
+                                .fill(null);
 
                             if (
                                 targetData.some(
@@ -2108,29 +2138,24 @@
 
                     const actualSales =
                         staffData.sales
-                            ?.[currentMonthIndex] ||
-                        0;
+                            ?.[currentMonthIndex] ?? null;
 
                     const forecastSales =
                         staffData.forecast
-                            ?.[currentMonthIndex] ||
-                        0;
+                            ?.[currentMonthIndex] ?? null;
 
                     const targetSales =
                         staffData.targetSales
-                            ?.[currentMonthIndex] ||
-                        0;
+                            ?.[currentMonthIndex] ?? null;
 
                     const achievementRate =
                         staffData
                             .achievementRate
-                            ?.[currentMonthIndex] ||
-                        0;
+                            ?.[currentMonthIndex] ?? null;
 
                     const currentValue =
                         staffData[m1]
-                            ?.[currentMonthIndex] ||
-                        0;
+                            ?.[currentMonthIndex] ?? null;
 
                     const cardColor =
                         `${
@@ -2309,6 +2334,43 @@
     }
 
     async function updateM2() {
+
+        if (
+            allData
+                ?.availability
+                ?.materials === false
+        ) {
+            if (c2) {
+                c2.destroy();
+                c2 = null;
+            }
+
+            const cards =
+                document
+                    .getElementById(
+                        'cards-2'
+                    );
+
+            if (cards) {
+                cards.innerHTML =
+                    `<div class="stat-card">
+                        <span class="stat-name">
+                            材料データ
+                        </span>
+                        <div class="stat-row">
+                            <span class="data-label">
+                                Supabaseの材料管理は現在未接続です
+                            </span>
+                            <span class="data-value sub">
+                                —
+                            </span>
+                        </div>
+                    </div>`;
+            }
+
+            return;
+        }
+
         const canvas =
             document
                 .getElementById(
@@ -2359,7 +2421,7 @@
                                     ?.[store]
                                     ?.[m2] ||
                                 new Array(12)
-                                    .fill(0),
+                                .fill(null),
 
                             borderColor:
                                 color,
@@ -2541,8 +2603,7 @@
                                             ]
                                             ?.[store]
                                             ?.[m2]
-                                            ?.[monthIndex] ||
-                                        0,
+                                            ?.[monthIndex] ?? null,
                                         m2
                                     )}
                                 </span>
@@ -2603,7 +2664,7 @@
                                     ?.[store]
                                     ?.[m3] ||
                                 new Array(12)
-                                    .fill(0),
+                                .fill(null),
 
                             borderColor:
                                 color,
@@ -2647,7 +2708,7 @@
                                     ?.[store]
                                     ?.[format.t] ||
                                 new Array(12)
-                                    .fill(0);
+                                .fill(null);
 
                             if (
                                 targetData.some(
@@ -2794,8 +2855,7 @@
                                 ]
                                 ?.[store]
                                 ?.[m3]
-                                ?.[monthIndex] ||
-                            0;
+                                ?.[monthIndex] ?? null;
 
                         const cardColor =
                             `${
@@ -2821,8 +2881,7 @@
                                     ]
                                     ?.[store]
                                     ?.[targetKey]
-                                    ?.[monthIndex] ||
-                                0;
+                                    ?.[monthIndex] ?? null;
 
                             return `
                                 <div
@@ -3194,7 +3253,7 @@
                     ? data[format.t][
                         monthIndex
                     ]
-                    : 0;
+                    : null;
 
             document
                 .getElementById(
