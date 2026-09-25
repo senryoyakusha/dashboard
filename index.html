@@ -1341,12 +1341,17 @@
         rate,
         hasTarget
     ) {
-        if (!hasTarget) {
+        if (
+            !hasTarget ||
+            rate === null ||
+            rate === undefined ||
+            !Number.isFinite(Number(rate))
+        ) {
             return 'achievement-mid';
         }
 
         const number =
-            Number(rate) || 0;
+            Number(rate);
 
         if (number >= 1) {
             return 'achievement-high';
